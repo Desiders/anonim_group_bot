@@ -14,7 +14,7 @@ MAX_LENGTH_ROOM = 10
 
 
 class RedisDB:
-    def __init__(self, host: str, port: int, password: str, db: int) -> None:
+    def __init__(self, host: str, port: int, password: str, db: int):
         self._host = host
         self._port = port
         self._password = password
@@ -23,16 +23,6 @@ class RedisDB:
 
         self._redis: Optional[aioredis.RedisConnection] = None
         self._connection_lock = asyncio.Lock(loop=self._loop)
-    
-    async def close(self) -> None:
-        async with self._connection_lock:
-            if self._redis and not self._redis.closed:
-                self._redis.close()
-
-    async def wait_closed(self) -> None:
-        async with self._connection_lock:
-            if self._redis:
-                await self._redis.wait_closed()
     
     async def redis(self) -> aioredis.Redis:
         async with self._connection_lock:
@@ -43,10 +33,21 @@ class RedisDB:
                                                                 encoding='utf-8')
         return self._redis
 
+    async def close(self):
+        async with self._connection_lock:
+            if self._redis and not self._redis.closed:
+                self._redis.close()
+
+    async def wait_closed(self):
+        async with self._connection_lock:
+            if self._redis:
+                await self._redis.wait_closed()
+
     # Активные комнаты
     async def get_rooms(self) -> List[str]:
         redis = await self.redis()
         rooms = await redis.hgetall(ROOMS_KEY)
+
         return rooms
 
     # Получить информацию о текущей комнате
@@ -60,6 +61,7 @@ class RedisDB:
 
         key_room = generate_key(ROOM_KEY, room_id)
         length = await redis.llen(key_room)
+
         return (True, (room_id, length))
 
     # Создать новую комнату
@@ -79,6 +81,7 @@ class RedisDB:
         transaction.hset(ROOMS_KEY, room_id, 1)
         transaction.rpush(key_room, user_id)
         await transaction.execute()
+
         return (..., room_id)
 
     # Вступить в комнату по номеру
@@ -108,6 +111,7 @@ class RedisDB:
         transaction.lrange(join_key_room, 0, -1)
         transaction.rpush(join_key_room, user_id)
         _, user_profile, users, _ = await transaction.execute()
+
         return (True, (join_id_room, user_profile, users))
     
     # Выход из комнаты
@@ -130,6 +134,7 @@ class RedisDB:
             transaction.hset(ROOMS_KEY, room_id, 0)
             transaction.unlink(key_room)
             await transaction.execute()
+
         return (delete, room_id)
 
     # Получить временные номера участников комнаты
@@ -142,6 +147,7 @@ class RedisDB:
         
         key_room = generate_key(ROOM_KEY, room_id)
         length = await redis.llen(key_room)
+
         return length
 
     # Исключение пользователя из комнаты по его временному номеру
@@ -173,6 +179,7 @@ class RedisDB:
         transaction.hget(key_user_profile, 'nickname')
         transaction.lrem(key_room, 1, kick_user_id)
         _, kick_user_nickname, _ = await transaction.execute()
+
         return (True, [kick_user_index, kick_user_nickname, room_id, kick_user_id, users])
 
     # Изменение номера комнаты на случайный
@@ -201,6 +208,7 @@ class RedisDB:
         transaction.hset(ROOMS_KEY, new_id_room, 1)
         transaction.rename(key_room, new_key_room)
         await transaction.execute()
+
         return (True, new_id_room)
     
     # Получение своего профиля
@@ -209,6 +217,7 @@ class RedisDB:
 
         key_user_profile = generate_key(PROFILE_KEY, user_id)
         user_profile = await redis.hgetall(key_user_profile)
+
         return user_profile
     
     # Получение чужого профиля
@@ -227,6 +236,7 @@ class RedisDB:
 
         key_user_profile = generate_key(PROFILE_KEY, user_id)
         user_profile = await redis.hgetall(key_user_profile)
+
         return user_profile
 
     # Редактирование профиля
@@ -256,4 +266,5 @@ class RedisDB:
             return (..., False)
 
         author['user_index'] = users.index(str(user_id))
+
         return (author, users)

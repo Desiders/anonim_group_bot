@@ -11,7 +11,7 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     from .create import command_create
     from .donate import command_donate
     from .edit import EditCache, command_edit, join_number, join_object
-    from .end import command_end
+    from .leave import command_leave
     from .get import command_get
     from .help import command_help
     from .info import command_info
@@ -40,8 +40,8 @@ def register_handlers(dispatcher: Dispatcher) -> None:
                                         commands=['create', 'создать', 'new', 'новая'])
     dispatcher.register_message_handler(command_join,
                                         commands=['join', 'присоединиться', 'вступить'])
-    dispatcher.register_message_handler(command_end,
-                                        commands=['end', 'exit', 'завершить', 'выйти'])
+    dispatcher.register_message_handler(command_leave,
+                                        commands=['leave', 'exit', 'покинуть', 'выйти'])
     dispatcher.register_message_handler(command_members,
                                         commands=['members', 'участники', 'члены'])
     dispatcher.register_message_handler(command_kick,

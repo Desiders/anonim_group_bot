@@ -4,36 +4,28 @@ from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.types import Message
 from aiogram.types.callback_query import CallbackQuery
 
-from ..services.database import RedisDB
-
 
 class DatabaseMiddleware(BaseMiddleware):
-    def __init__(self, host: str, port: int, password: str, db: int):
+    def __init__(self, database):
         super().__init__()
-        self._host = host
-        self._port = port
-        self._password = password
-        self._db = db
+        self.database = database
 
     async def pre_process(self, call: Union[Message, CallbackQuery], data: dict):
-        database = RedisDB(host=self._host,
-                           port=self._port,
-                           password=self._password,
-                           db=self._db)
-        data["database"] = database
+        data["database"] = self.database
     
+    """
     async def post_process(self, call: Union[Message, CallbackQuery], data: dict):
-        database = data["database"]
-        await database.close()
-        await database.wait_closed()
+        pass
+    """
     
     async def trigger(self, action, args):
         call, *_, data = args
         if action == 'pre_process_message' or action == 'pre_process_callback_query':
             await self.pre_process(call, data)
-        elif action == 'post_process_message' or action == 'post_process_callback_query':
-            await self.post_process(call, data)
         else:
             return False
-
         return True
+        """
+        elif action == 'post_process_message' or action == 'post_process_callback_query':
+            await self.post_process(call, data)
+        """

@@ -6,20 +6,30 @@ async def main() -> NoReturn:
 
     from app import register_handlers
     from app.middlewares.database import DatabaseMiddleware
+    from app.services.database import RedisDB
     from loader import config, dispatcher, logger
-    
-    logger.info("Setup middlewares")
-    dispatcher.middleware.setup(LoggingMiddleware())
-    dispatcher.middleware.setup(DatabaseMiddleware(host=config.redis.host,
-                                                   port=config.redis.port,
-                                                   password=config.redis.password,
-                                                   db=config.redis.db,))
 
-    logger.info("Register handlers")
+    logger.info("Setup RedisDB")
+    database = RedisDB(host=config.redis.host,
+                       port=config.redis.port,
+                       password=config.redis.password,
+                       db=config.redis.db)
+
+    logger.info("Setup Middlewares")
+    dispatcher.middleware.setup(DatabaseMiddleware(database))
+    dispatcher.middleware.setup(LoggingMiddleware(logger))
+
+    logger.info("Register Handlers")
     register_handlers(dispatcher)
 
-    logger.warning("Starting bot")
-    await dispatcher.start_polling()
+    logger.warning("Starting Bot")
+    try:
+        await dispatcher.start_polling()
+    finally:
+        await database.close()
+        await database.wait_closed()
+        await dispatcher.bot.session.close()
+    logger.warning("Closing Bot\n\n")
 
 
 if __name__ == '__main__':
