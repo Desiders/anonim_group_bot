@@ -8,6 +8,7 @@ def register_handlers(dispatcher: Dispatcher) -> None:
 
     from .change import command_change
     from .commands import command_commands
+    from .create import command_create
     from .donate import command_donate
     from .edit import EditCache, command_edit, join_number, join_object
     from .end import command_end
@@ -17,7 +18,6 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     from .join import command_join
     from .kick import command_kick
     from .members import command_members
-    from .create import command_create
     from .profile import command_profile
     from .room import command_room
     from .rooms import command_rooms, get_rooms

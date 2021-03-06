@@ -5,7 +5,7 @@ async def main() -> NoReturn:
     from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
     from app import register_handlers
-    from app.middlewares import DatabaseMiddleware
+    from app.middlewares.database import DatabaseMiddleware
     from loader import config, dispatcher, logger
     
     logger.info("Setup middlewares")

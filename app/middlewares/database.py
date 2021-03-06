@@ -8,7 +8,7 @@ from ..services.database import RedisDB
 
 
 class DatabaseMiddleware(BaseMiddleware):
-    def __init__(self, host: str, port: int, password: str, db: int) -> None:
+    def __init__(self, host: str, port: int, password: str, db: int):
         super().__init__()
         self._host = host
         self._port = port
@@ -16,12 +16,11 @@ class DatabaseMiddleware(BaseMiddleware):
         self._db = db
 
     async def pre_process(self, call: Union[Message, CallbackQuery], data: dict):
-        data["database"] = RedisDB(
-            host=self._host,
-            port=self._port,
-            password=self._password,
-            db=self._db,
-        )
+        database = RedisDB(host=self._host,
+                           port=self._port,
+                           password=self._password,
+                           db=self._db)
+        data["database"] = database
     
     async def post_process(self, call: Union[Message, CallbackQuery], data: dict):
         database = data["database"]
@@ -36,4 +35,5 @@ class DatabaseMiddleware(BaseMiddleware):
             await self.post_process(call, data)
         else:
             return False
+
         return True

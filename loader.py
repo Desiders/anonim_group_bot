@@ -1,7 +1,8 @@
 import logging
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.types import ParseMode
 
 from app import load_config
 
@@ -14,4 +15,4 @@ logging.basicConfig(
 
 config = load_config("bot.ini")
 
-dispatcher = Dispatcher(Bot(token=config.bot.token, parse_mode=types.ParseMode.HTML), storage=MemoryStorage())
+dispatcher = Dispatcher(Bot(token=config.bot.token, parse_mode=ParseMode.HTML), storage=MemoryStorage())
