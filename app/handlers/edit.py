@@ -24,9 +24,11 @@ async def command_edit(call: Message, state: FSMContext) -> None:
     await call.answer(get_text('edit'))
     await state.set_state(EditCache.number_object.state)
 
+
 async def join_number(call: Message, state: FSMContext) -> None:
     number_object = call.text
     information = MATCHES_NUMBERS.get(number_object)
+    # Передан некорректный аргумент в качестве номера объекта
     if not information:
         return await no_correct_object(call, state, 'edit_number_warning', number_object)
 
@@ -37,14 +39,15 @@ async def join_number(call: Message, state: FSMContext) -> None:
         data['type_object'] = type_object
         data['type_object_for_text'] = type_object_for_text
         data['acceptable_type_object'] = acceptable_type_object
-
     await call.answer(get_text('edit_number_success').format(type_object_for_text))
     await state.set_state(EditCache.new_object)
+
 
 async def join_object(call: Message, state: FSMContext, database) -> None:
     information = await state.get_data()
     acceptable_type_objects = information['acceptable_type_object']
     type_object_for_text = information['type_object_for_text']
+    # Если для объекта передан некорректный тип данных
     if call.content_type != acceptable_type_objects:
         return await no_correct_object(call, state, 'edit_object_warning', type_object_for_text)
 
@@ -56,14 +59,15 @@ async def join_object(call: Message, state: FSMContext, database) -> None:
         max_length_description=config.standart.max_length_description,
     )
     new_object = new_object_over_type(type_object, call, standart)
+    # Если аргумент передан неправильно
     if not new_object:
         arguments = tuple(standart.values())
         return await no_correct_object(call, state, 'edit_object_restriction_warning', arguments)
 
     await database.edit_profile(call.from_user.id, type_object, new_object)
-
     await call.answer(get_text('edit_object_success'))
     await state.finish()
+
 
 async def no_correct_object(call: Message, state: FSMContext, command: str, arguments: str) -> None:
     await call.answer(get_text(command).format(arguments))

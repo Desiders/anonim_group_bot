@@ -19,25 +19,24 @@ class RedisDB:
         self._port = port
         self._password = password
         self._db = db
-        
         self._loop = asyncio.get_event_loop()
+
         self._redis: Optional[aioredis.RedisConnection] = None
         self._connection_lock = asyncio.Lock(loop=self._loop)
     
-    async def close(self):
+    async def close(self) -> None:
         async with self._connection_lock:
             if self._redis and not self._redis.closed:
                 self._redis.close()
 
-    async def wait_closed(self):
+    async def wait_closed(self) -> None:
         async with self._connection_lock:
             if self._redis:
-                return await self._redis.wait_closed()
-            return True
+                await self._redis.wait_closed()
     
     async def redis(self) -> aioredis.Redis:
         async with self._connection_lock:
-             if self._redis is None or self._redis.closed:
+            if self._redis is None or self._redis.closed:
                 self._redis = await aioredis.create_redis_pool((self._host, self._port),
                                                                 password=self._password,
                                                                 db=self._db,
@@ -220,3 +219,24 @@ class RedisDB:
         key_user_profile = generate_key(PROFILE_KEY, user_id)
         redis = await self.redis()
         await redis.hset(key_user_profile, type_object, new_object)
+    
+    # Получить временные номера участников комнаты для отправки сообщения
+    async def get_members_over_send(self, user_id: int) -> Union[Tuple[None],
+                                                            Tuple[bool],
+                                                            Tuple[Dict[str, str], List[str]]]:
+        key_user = generate_key(USER_KEY, user_id)
+        redis = await self.redis()
+        room_id = await redis.get(key_user)
+        if not room_id:
+            return (..., None)
+        
+        key_user_profile = generate_key(PROFILE_KEY, user_id)
+        key_room = generate_key(ROOM_KEY, room_id)
+        transaction = redis.multi_exec()
+        transaction.hgetall(key_user_profile)
+        transaction.lrange(key_room, 0, -1)
+        author, users = await transaction.execute()
+        if len(users) == 1:
+            return (..., False)
+        author['user_index'] = users.index(str(user_id))
+        return (author, users)

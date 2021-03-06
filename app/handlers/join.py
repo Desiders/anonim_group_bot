@@ -1,4 +1,5 @@
 import asyncio
+from typing import Dict, List, Tuple
 
 from aiogram.types import Message
 from loader import config
@@ -6,34 +7,48 @@ from loader import config
 from ..scripts.functions import get_text, validate_input_join_room_id
 
 
+async def notify_users(call: Message, args: Tuple[str, Dict[str, str], List[str]]):
+    _, user_profile, users = args
+    # Получаем никнейм пользователя из профиля, если отсутствует - устанавливаем стандартный
+    nickname = user_profile.get('nickname', config.standart.standart_name)
+    # Получаем описание пользователя из профиля, если отсутствует - устанавливаем стандартный
+    description = user_profile.get('description', config.standart.standart_description)
+    # Получаем фотографию пользователя из профиля, иначе ничего не прикрепляем
+    photo = user_profile.get('photo')
+    text = get_text('join_new_user').format(nickname, description)
+    # Отправляем сообщения, если фотография присутствует в профиле
+    if photo:
+        for user_id in users:
+            await asyncio.sleep(config.standart.time_sleep_new_member)
+            await call.bot.send_photo(
+                chat_id=user_id,  photo=photo, caption=text, parse_mode=''
+            )
+    # Отправляем сообщения, если фотография отсутствует в профиле
+    else:
+        for user_id in users:
+            await asyncio.sleep(config.standart.time_sleep_new_member)
+            await call.bot.send_message(
+                chat_id=user_id, text=text, disable_web_page_preview=True, parse_mode=''
+            )
+
+
 async def command_join(call: Message, database) -> None:
     join_id_room = call.get_args()
+    # Предупреждаем участника о том, что после команды должен следовать номер комнаты для вступления
     if not join_id_room:
         return await call.answer(get_text('join_no_args'))
 
+    # Если аргументы переданы неправильно
     if not validate_input_join_room_id(join_id_room):
         return await call.answer(get_text('join_warning').format(join_id_room))
 
     result, args = await database.join_room(call.from_user.id, join_id_room)
+    # Если комната отсутствует или переполнена
     if result is None:
         command_trigger = 'join_warning'
+    # Если у вас нет комнаты, то отправляет сообщение о вступлении в новую, иначе о том, что вы являетесь членом другой
     else:
         command_trigger = 'join_success' if result else 'join_warning_have_room'
-
-    await call.answer(get_text(command_trigger).format(args))
     if isinstance(args, tuple):
-        _, user_profile, users_id = args
-        nickname = user_profile.get('nickname', config.standart.standart_name)
-        description = user_profile.get('description', config.standart.standart_description)
-        photo = user_profile.get('photo')
-        text = get_text('join_new_user').format(nickname, description)
-        for user_id in users_id:
-            await asyncio.sleep(config.standart.time_sleep_new_member)
-            if photo:
-                await call.bot.send_photo(
-                    chat_id=user_id,  photo=photo, caption=text, parse_mode=''
-                )
-            else:
-                await call.bot.send_message(
-                    chat_id=user_id, text=text, disable_web_page_preview=True, parse_mode=''
-                )
+        asyncio.get_event_loop().call_later(0.2, asyncio.create_task, notify_users(call, args))
+    await call.answer(get_text(command_trigger).format(args))

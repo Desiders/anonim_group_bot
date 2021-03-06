@@ -11,9 +11,11 @@ async def command_rooms(call: Message, database) -> None:
             InlineKeyboardButton('Старые комнаты', callback_data='old_rooms')],
         [   InlineKeyboardButton('Случайные комнаты', callback_data='random_rooms')],
     ]
+    # Создаём клавиатуру для сообщения
     markup = InlineKeyboardMarkup(inline_keyboard=inline_keyboards)
 
     await call.answer(get_text('rooms_mode'), reply_markup=markup)
+
 
 async def get_rooms(call: CallbackQuery, database) -> None:
     mode = call.data
@@ -21,8 +23,10 @@ async def get_rooms(call: CallbackQuery, database) -> None:
     rooms_mode = rooms_appropriate_mode(rooms, mode)
     rooms_for_text = rooms_formatted_over_text(rooms_mode)
     if not rooms_for_text:
+        # Если нет ни одной активной комнаты
         await call.message.answer(get_text('rooms_warning'))
     else:
+        # Если есть активные комнаты
         await call.message.answer(get_text('rooms_success').format(rooms_for_text))
-
+    # Отвечаем на callback
     await call.answer()

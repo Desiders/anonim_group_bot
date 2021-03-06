@@ -16,9 +16,6 @@ class DatabaseMiddleware(BaseMiddleware):
         self._db = db
 
     async def pre_process(self, call: Union[Message, CallbackQuery], data: dict):
-        chat_id = call.chat.id if 'chat' in call else call.message.chat.id
-        await call.bot.send_chat_action(chat_id, 'typing')
-
         data["database"] = RedisDB(
             host=self._host,
             port=self._port,
@@ -27,8 +24,9 @@ class DatabaseMiddleware(BaseMiddleware):
         )
     
     async def post_process(self, call: Union[Message, CallbackQuery], data: dict):
-        await data["database"].close()
-        await data["database"].wait_closed()
+        database = data["database"]
+        await database.close()
+        await database.wait_closed()
     
     async def trigger(self, action, args):
         call, *_, data = args
