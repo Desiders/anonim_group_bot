@@ -19,11 +19,13 @@ def generate_room_id(mod: bool = False) -> str:
     iterations = 4 if mod else 3
     random_numbers = (random.randrange(1, 1000) for _ in range(iterations))
     room_id = "-".join(tuple(map(str, random_numbers)))
+
     return room_id
 
 
 def generate_key_users(type_generate: str, users: List[int]) -> List[str]:
     key_users = [generate_key(type_generate, user) for user in users]
+
     return key_users
 
 
@@ -75,6 +77,7 @@ def rooms_appropriate_mode(rooms: List[str], mode: str) -> List[str]:
         rooms = reverse_rooms[:iteration]
     else: # elif mode.startswith('old')
         rooms = available_rooms[:iteration]
+
     return rooms
 
 
@@ -86,6 +89,7 @@ def rooms_formatted_over_text(rooms: list) -> str:
     style = '<code>{}</code>'
     rooms_formatted = [start + style.format(room) for room in rooms]
     rooms_over_text = '\n'.join(rooms_formatted)
+
     return rooms_over_text
 
 
@@ -116,4 +120,5 @@ def indexes_formatted_over_text(length: int) -> str:
     style = '<b>{}</b>'
     indexes = [style.format(number) for number in range(length)]
     indexes_over_text = ', '.join(indexes)
+
     return indexes_over_text

@@ -11,12 +11,12 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     from .create import command_create
     from .donate import command_donate
     from .edit import EditCache, command_edit, join_number, join_object
-    from .leave import command_leave
     from .get import command_get
     from .help import command_help
     from .info import command_info
     from .join import command_join
     from .kick import command_kick
+    from .leave import command_leave
     from .members import command_members
     from .profile import command_profile
     from .room import command_room
@@ -33,19 +33,19 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     dispatcher.register_message_handler(command_rooms,
                                         commands=['rooms', 'комнаты'])
     dispatcher.register_callback_query_handler(get_rooms,
-                                               Text(endswith='rooms'))
+                                                Text(endswith='rooms'))
     dispatcher.register_message_handler(command_room,
                                         commands=['room', 'комната'])
     dispatcher.register_message_handler(command_create,
-                                        commands=['create', 'создать', 'new', 'новая'])
+                                        commands=['create', 'создать'])
     dispatcher.register_message_handler(command_join,
                                         commands=['join', 'присоединиться', 'вступить'])
     dispatcher.register_message_handler(command_leave,
-                                        commands=['leave', 'exit', 'покинуть', 'выйти'])
+                                        commands=['leave', 'покинуть'])
     dispatcher.register_message_handler(command_members,
-                                        commands=['members', 'участники', 'члены'])
+                                        commands=['members', 'участники'])
     dispatcher.register_message_handler(command_kick,
-                                        commands=['kick', 'исключить', 'выгнать'])
+                                        commands=['kick', 'исключить'])
     dispatcher.register_message_handler(command_change,
                                         commands=['change', 'поменять'])
     dispatcher.register_message_handler(command_profile,
@@ -53,7 +53,7 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     dispatcher.register_message_handler(command_get,
                                         commands=['get', 'получить'])
     dispatcher.register_message_handler(command_edit,
-                                        commands=['edit', 'редактировать', 'изменить'])
+                                        commands=['edit', 'изменить'])
     dispatcher.register_message_handler(join_number,
                                         state=EditCache.number_object,
                                         content_types=ContentType.ANY)
@@ -61,7 +61,7 @@ def register_handlers(dispatcher: Dispatcher) -> None:
                                         state=EditCache.new_object,
                                         content_types=ContentType.ANY)
     dispatcher.register_message_handler(command_info,
-                                        commands=['information', 'info', 'информация'])
+                                        commands=['info', 'информация'])
     dispatcher.register_message_handler(command_donate,
                                         commands=['donate', 'пожертвовать'])
     dispatcher.register_message_handler(command_send,

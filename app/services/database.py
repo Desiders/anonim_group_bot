@@ -9,6 +9,7 @@ from ..scripts.functions import (generate_key, generate_key_users,
 ROOM_KEY = 'room'
 USER_KEY = 'user'
 PROFILE_KEY = 'profile'
+USERS_KEY = 'users'
 ROOMS_KEY = 'rooms'
 MAX_LENGTH_ROOM = 10
 
@@ -43,9 +44,16 @@ class RedisDB:
             if self._redis:
                 await self._redis.wait_closed()
 
+    #Новый пользователь
+    async def add_user(self, user_id: int):
+        redis = await self.redis()
+
+        await redis.sadd(USERS_KEY, user_id)
+
     # Активные комнаты
     async def get_rooms(self) -> List[str]:
         redis = await self.redis()
+
         rooms = await redis.hgetall(ROOMS_KEY)
 
         return rooms
@@ -116,8 +124,9 @@ class RedisDB:
     
     # Выход из комнаты
     async def end_room(self, user_id: int) -> Tuple[Union[None, bool, str]]:
-        key_user = generate_key(USER_KEY, user_id)
         redis = await self.redis()
+
+        key_user = generate_key(USER_KEY, user_id)
         room_id = await redis.get(key_user)
         if not room_id:
             return (None, ...)
@@ -134,13 +143,13 @@ class RedisDB:
             transaction.hset(ROOMS_KEY, room_id, 0)
             transaction.unlink(key_room)
             await transaction.execute()
-
         return (delete, room_id)
 
     # Получить временные номера участников комнаты
     async def get_members(self, user_id: int) -> Union[None, int]:
-        key_user = generate_key(USER_KEY, user_id)
         redis = await self.redis()
+
+        key_user = generate_key(USER_KEY, user_id)
         room_id = await redis.get(key_user)
         if not room_id:
             return None
@@ -152,7 +161,7 @@ class RedisDB:
 
     # Исключение пользователя из комнаты по его временному номеру
     async def kick_user_over_id_from_room(self, user_id: int, kick_user_index: int) -> Tuple[Union[None, bool,
-                                                                                                   int, list]]:
+                                                                                                    int, list]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -240,7 +249,7 @@ class RedisDB:
         return user_profile
 
     # Редактирование профиля
-    async def edit_profile(self, user_id: int, type_object: str, new_object: str) -> None:
+    async def edit_profile(self, user_id: int, type_object: str, new_object: str):
         redis = await self.redis()
 
         key_user_profile = generate_key(PROFILE_KEY, user_id)

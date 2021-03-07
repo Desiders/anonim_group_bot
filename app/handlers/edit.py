@@ -64,11 +64,11 @@ async def join_object(call: Message, state: FSMContext, database) -> None:
         arguments = tuple(standart.values())
         return await no_correct_object(call, state, 'edit_object_restriction_warning', arguments)
 
-    await database.edit_profile(call.from_user.id, type_object, new_object)
-    await call.answer(get_text('edit_object_success'))
     await state.finish()
+    await database.edit_profile(call.from_user.id, type_object, new_object)
+    await call.reply(get_text('edit_object_success'))
 
 
 async def no_correct_object(call: Message, state: FSMContext, command: str, arguments: str) -> None:
-    await call.answer(get_text(command).format(arguments))
     await state.finish()
+    await call.reply(get_text(command).format(arguments))
