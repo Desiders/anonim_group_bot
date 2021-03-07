@@ -1,6 +1,6 @@
 import json
 import random
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 
 from aiogram.types.message import Message
 
@@ -44,7 +44,6 @@ def validate_input_join_room_id(room_id: str) -> bool:
     length_without_hyphen = len(without_hyphen)
     if length_without_hyphen > 3 + (length_hyphen * 3):
         return False
-
     return True
 
 
@@ -77,7 +76,6 @@ def rooms_appropriate_mode(rooms: List[str], mode: str) -> List[str]:
         rooms = reverse_rooms[:iteration]
     else: # elif mode.startswith('old')
         rooms = available_rooms[:iteration]
-
     return rooms
 
 
@@ -102,7 +100,6 @@ def validate_input_kick_user_index(kick_user_id: str, max_users_id: int) -> Tupl
 
     if int(kick_user_id) > max_users_id:
         return (False, 'long_id')
-
     return (True, ...)
 
 
@@ -112,7 +109,6 @@ def validate_input_get_user_index(user_index: str) -> bool:
 
     if not (-1 < int(user_index) < 11):
         return False
-
     return True
 
 
@@ -122,3 +118,20 @@ def indexes_formatted_over_text(length: int) -> str:
     indexes_over_text = ', '.join(indexes)
 
     return indexes_over_text
+
+
+def rooms_active_and_inactive(rooms: Dict[str, str]) -> Dict[str, str]:
+    rooms_create_count, rooms_active_count, rooms_inactive_count = 0, 0, 0
+    for room in rooms:
+        if rooms[room] == '1':
+            rooms_active_count += 1
+        else:
+            rooms_inactive_count += 1
+        rooms_create_count += 1
+    rooms_count = dict(all=rooms_create_count,
+                       active=rooms_active_count,
+                       inactive=rooms_inactive_count)
+    
+    return rooms_count
+    
+    

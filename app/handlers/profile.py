@@ -4,7 +4,7 @@ from loader import config
 from ..scripts.functions import get_text
 
 
-async def command_profile(call: Message, database) -> None:
+async def command_profile(call: Message, database):
     user_profile = await database.get_my_profile(call.from_user.id)
     # Получаем никнейм пользователя из профиля, если отсутствует - устанавливаем стандартный
     nickname = user_profile.get('nickname', config.standart.standart_name)

@@ -20,7 +20,7 @@ class EditCache(StatesGroup):
     new_object = State()
 
 
-async def command_edit(call: Message, state: FSMContext) -> None:
+async def command_edit(call: Message, state: FSMContext):
     await call.answer(get_text('edit'))
     await state.set_state(EditCache.number_object.state)
 

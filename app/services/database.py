@@ -277,3 +277,16 @@ class RedisDB:
         author['user_index'] = users.index(str(user_id))
 
         return (author, users)
+    
+    # Информация о работе бота
+    async def get_info(self):
+        redis = await self.redis()
+
+        server = await redis.info('all')
+        
+        transaction = redis.multi_exec()
+        transaction.hgetall(ROOMS_KEY)
+        transaction.scard(USERS_KEY)
+        rooms, users_count = await transaction.execute()
+
+        return server, rooms, users_count

@@ -17,7 +17,7 @@ async def command_rooms(call: Message, database) -> None:
     await call.answer(get_text('rooms_mode'), reply_markup=markup)
 
 
-async def get_rooms(call: CallbackQuery, database) -> None:
+async def get_rooms(call: CallbackQuery, database):
     mode = call.data
     rooms = await database.get_rooms()
     rooms_mode = rooms_appropriate_mode(rooms, mode)

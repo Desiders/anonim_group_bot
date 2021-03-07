@@ -3,7 +3,7 @@ from aiogram.types import Message
 from ..scripts.functions import get_text
 
 
-async def command_leave(call: Message, database) -> None:
+async def command_leave(call: Message, database):
     result, args = await database.end_room(call.from_user.id)
     # Если не являетесь членом какой-либо комнаты
     if result is None:

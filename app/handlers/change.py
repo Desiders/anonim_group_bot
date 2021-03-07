@@ -3,7 +3,7 @@ from aiogram.types import Message
 from ..scripts.functions import get_text
 
 
-async def command_change(call: Message, database) -> None:
+async def command_change(call: Message, database):
     result, args = await database.change_id_room(call.from_user.id)
     # Если вы не являетесь членом какой-либо комнаты
     if result is None:
