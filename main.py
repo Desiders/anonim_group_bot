@@ -29,7 +29,6 @@ async def main() -> NoReturn:
         await database.close()
         await database.wait_closed()
         await dispatcher.bot.session.close()
-    logger.warning("Closing Bot\n\n")
 
 
 if __name__ == '__main__':

@@ -1,10 +1,9 @@
 import asyncio
-from typing import List
 
 from aiogram.types import Message
-from loader import config
 
-from ..scripts.functions import get_text, validate_input_kick_user_index
+from ..scripts.functions import (get_name, get_text, time_sleep,
+                                 validate_kick_user_index)
 from ..services.database import MAX_LENGTH_ROOM
 
 
@@ -16,7 +15,7 @@ async def notify_users(call: Message, access_or_args: list):
                                     disable_web_page_preview=True)
     except: ...
     for user_id in users:
-        await asyncio.sleep(config.standart.time_sleep_end_member)
+        await time_sleep('end_member')
         try:
             await call.bot.send_message(user_id, get_text('kick_notify_all').format(user_index, user_nickname),
                                         disable_web_page_preview=True, parse_mode='')
@@ -28,7 +27,7 @@ async def command_kick(call: Message, database) -> None:
     if not kick_user_id:
         return await call.answer(get_text('kick_no_args'))
 
-    access, text = validate_input_kick_user_index(kick_user_id, MAX_LENGTH_ROOM)
+    access, text = validate_kick_user_index(kick_user_id, MAX_LENGTH_ROOM)
     if not access:
         if text == 'no_number' or text == 'long_id':
             command_trigger = 'kick_warning_no_have'
@@ -36,18 +35,18 @@ async def command_kick(call: Message, database) -> None:
             command_trigger = 'kick_warning_admin'
         return await call.answer(get_text(command_trigger).format(kick_user_id), parse_mode='')
 
-    user, access_or_args = await database.kick_user(call.from_user.id, int(kick_user_id))
+    user, parts = await database.kick_user(call.from_user.id, int(kick_user_id))
     if not user:
         command_trigger = 'kick_warning' if user is None else 'kick_warning_no_have'
-    elif not access_or_args:
+    elif not parts:
         command_trigger = 'kick_warning_access'
     else:
         command_trigger = 'kick_success'
-        user_nickname = access_or_args[1]
-        if not user_nickname:
-            access_or_args[1]  = config.standart.standart_name
-        asyncio.get_event_loop().call_later(0.2, asyncio.create_task, notify_users(call, access_or_args))
+        nickname = parts[1]
+        if not nickname:
+            parts[1]  = get_name()
+        asyncio.get_event_loop().call_later(0.2, asyncio.create_task, notify_users(call, parts))
 
-    await call.answer(get_text(command_trigger).format(access_or_args),
+    await call.answer(get_text(command_trigger).format(parts),
                       disable_web_page_preview=True, parse_mode='')
 

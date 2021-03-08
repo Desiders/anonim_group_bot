@@ -1,6 +1,6 @@
 from aiogram.types import Message
 
-from ..scripts.functions import get_text, indexes_formatted_over_text
+from ..scripts.functions import get_text, index_formatted
 
 
 async def command_members(call: Message, database) -> None:
@@ -8,6 +8,6 @@ async def command_members(call: Message, database) -> None:
     if not length:
         return await call.answer(get_text('members_warning'))
     
-    indexes = indexes_formatted_over_text(length)
+    indexes = index_formatted(length)
 
     await call.answer(get_text('members').format(indexes))

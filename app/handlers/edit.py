@@ -3,7 +3,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message
 from loader import config
 
-from ..scripts.functions import get_text, new_object_over_type
+from ..scripts.functions import get_text, validate_object
 
 MATCHES_NUMBERS = {
     '1': dict(type_object='nickname', type_object_for_text='никнейма', acceptable_type_object='text'),
@@ -58,7 +58,7 @@ async def join_object(call: Message, state: FSMContext, database) -> None:
         min_length_description=config.standart.min_length_description,
         max_length_description=config.standart.max_length_description,
     )
-    new_object = new_object_over_type(type_object, call, standart)
+    new_object = validate_object(type_object, call, standart)
     if not new_object:
         arguments = tuple(standart.values())
         return await no_correct_object(call, state, 'edit_object_restriction_warning', arguments)

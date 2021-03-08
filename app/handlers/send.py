@@ -5,9 +5,8 @@ from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import MediaGroup, Message
 from aiogram.types.input_media import (InputMediaAudio, InputMediaDocument,
                                        InputMediaPhoto, InputMediaVideo)
-from loader import config
 
-from ..scripts.functions import get_text
+from ..scripts.functions import get_name, get_text, time_sleep
 
 
 def get_album(album: list) -> list:
@@ -23,7 +22,7 @@ async def send_media_group(call: Message, state: FSMContext):
         media, users = data[call.media_group_id]['media'], data[call.media_group_id]['users']
         media_group = get_album(media)
         for user_id in users:
-            await asyncio.sleep(config.standart.time_sleep_new_message)
+            await time_sleep('new_message')
             try:
                 await call.bot.send_media_group(user_id, media_group)
             except: ...
@@ -41,14 +40,14 @@ async def send_media_single(call: Message, caption: str, author: Dict[str, str],
         return await call.reply(get_text('send_warning'))
     if content_type == 'text':
         for user_id in users:
-            await asyncio.sleep(config.standart.time_sleep_new_message)
+            await time_sleep('new_message')
             try:
                 await call.bot.send_message(user_id, caption, parse_mode='')
             except: ...
     else:
         from_chat_id, message_id = call.chat.id, call.message_id
         for user_id in users:
-            await asyncio.sleep(config.standart.time_sleep_new_message)
+            await time_sleep('new_message')
             try:
                 await call.bot.copy_message(user_id, from_chat_id, message_id,
                                             caption=caption, parse_mode='')
@@ -96,8 +95,7 @@ def get_caption(call: Message, author: Dict[str, str]) -> Union[None, str]:
             return
     else:
         caption = ''
-    # Получаем никнейм автора ыиз профиля, если отсутствует - устанавливаем стандартный
-    nickname = author.get('nickname', config.standart.standart_name)
+    nickname = get_name(author)
     user_index = author['user_index']
     caption = get_text('send_message').format(nickname, user_index, caption)
 

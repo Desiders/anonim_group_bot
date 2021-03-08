@@ -1,7 +1,7 @@
 from aiogram.types import Message
-from loader import config
 
-from ..scripts.functions import get_text, validate_input_get_user_index
+from ..scripts.functions import (get_description, get_name, get_photo,
+                                 get_text, validate_get_user_index)
 
 
 async def command_get(call: Message, database) -> None:
@@ -9,19 +9,19 @@ async def command_get(call: Message, database) -> None:
     if not user_index:
         return await call.answer(get_text('get_no_args'))
     
-    if not validate_input_get_user_index(user_index):
+    if not validate_get_user_index(user_index):
         return await call.answer(get_text('get_warning_no_have').format(user_index))
 
-    user_profile = await database.get_profile(call.from_user.id, int(user_index))
-    if user_profile is None:
+    profile = await database.get_profile(call.from_user.id, int(user_index))
+    if profile is None:
         return await call.answer(get_text('get_warning'))
 
-    if not user_profile and user_profile != {}:
+    if not profile and profile != {}:
         return await call.answer(get_text('get_warning_no_have').format(user_index))
 
-    nickname = user_profile.get('nickname', config.standart.standart_name)
-    description = user_profile.get('description', config.standart.standart_description)
-    photo = user_profile.get('photo')
+    nickname = get_name(profile)
+    description = get_description(profile)
+    photo = get_photo(profile)
     chat_id = call.chat.id
     text = get_text('get_profile').format(user_index,nickname, description)
     if photo:

@@ -1,8 +1,10 @@
+import asyncio
 import json
 import random
-from typing import List, Tuple, Union, Dict
+from typing import List, Tuple, Union
 
 from aiogram.types.message import Message
+from loader import config
 
 from .. import wording
 
@@ -29,7 +31,7 @@ def generate_key_users(type_generate: str, users: List[int]) -> List[str]:
     return key_users
 
 
-def validate_input_join_room_id(room_id: str) -> bool:
+def validate_room_id(room_id: str) -> bool:
     length_hyphen = room_id.count('-')
     if not (1 < length_hyphen < 4):
         return False
@@ -47,7 +49,7 @@ def validate_input_join_room_id(room_id: str) -> bool:
     return True
 
 
-def new_object_over_type(type_object: str, input_object: Message, standart: dict) -> Union[str, None]:                    
+def validate_object(type_object: str, input_object: Message, standart: dict) -> Union[str, None]:                    
     if type_object == 'photo':
         return input_object.photo[-1].file_id
 
@@ -87,7 +89,7 @@ def rooms_formatted(rooms: list) -> str:
     return rooms_over_text
 
 
-def validate_input_kick_user_index(kick_user_id: str, max_users_id: int) -> Tuple[Union[bool, str]]:
+def validate_kick_user_index(kick_user_id: str, max_users_id: int) -> Tuple[Union[bool, str]]:
     if not kick_user_id.isdecimal():
         return (False, 'no_number')
 
@@ -99,7 +101,7 @@ def validate_input_kick_user_index(kick_user_id: str, max_users_id: int) -> Tupl
     return (True, ...)
 
 
-def validate_input_get_user_index(user_index: str) -> bool:
+def validate_get_user_index(user_index: str) -> bool:
     if not user_index.isdecimal():
         return False
 
@@ -108,9 +110,39 @@ def validate_input_get_user_index(user_index: str) -> bool:
     return True
 
 
-def indexes_formatted_over_text(length: int) -> str:
+def index_formatted(length: int) -> str:
     style = '<b>{}</b>'
     indexes = [style.format(number) for number in range(length)]
     indexes_over_text = ', '.join(indexes)
 
     return indexes_over_text
+
+
+def get_name(profile: dict = None) -> str:
+    if profile:
+        nickname = profile.get('nickname', config.standart.standart_name)
+    else:
+        nickname = config.standart.standart_name
+
+    return nickname
+
+
+def get_description(profile: dict) -> str:
+    description = profile.get('description', config.standart.standart_description)
+
+    return description
+
+
+def get_photo(profile: dict) -> Union[str, None]:
+    photo = profile.get('photo')
+
+    return photo
+
+
+async def time_sleep(type_sleep: str):
+    if type_sleep == 'new_message':
+        await asyncio.sleep(config.standart.time_sleep_new_message)
+    elif type_sleep == 'new_member':
+        await asyncio.sleep(config.standart.time_sleep_new_member)
+    elif type_sleep == 'end_member':
+        await asyncio.sleep(config.standart.time_sleep_end_member)

@@ -1,14 +1,13 @@
 from aiogram.types import Message
-from loader import config
 
-from ..scripts.functions import get_text
+from ..scripts.functions import get_description, get_name, get_photo, get_text
 
 
 async def command_profile(call: Message, database):
-    user_profile = await database.get_my_profile(call.from_user.id)
-    nickname = user_profile.get('nickname', config.standart.standart_name)
-    description = user_profile.get('description', config.standart.standart_description)
-    photo = user_profile.get('photo')
+    profile = await database.get_my_profile(call.from_user.id)
+    nickname = get_name(profile)
+    description = get_description(profile)
+    photo = get_photo(profile)
     chat_id = call.chat.id
     text = get_text('profile').format(nickname, description)
     if photo:
