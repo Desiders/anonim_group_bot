@@ -29,11 +29,11 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     dispatcher.register_message_handler(command_help,
                                         CommandHelp())
     dispatcher.register_message_handler(command_commands,
-                                        commands=['commands', 'cmd', 'команды'])
+                                        commands=['commands', 'команды'])
     dispatcher.register_message_handler(command_rooms,
                                         commands=['rooms', 'комнаты'])
     dispatcher.register_callback_query_handler(get_rooms,
-                                                Text(endswith='rooms'))
+                                               Text(endswith='rooms'))
     dispatcher.register_message_handler(command_room,
                                         commands=['room', 'комната'])
     dispatcher.register_message_handler(command_create,

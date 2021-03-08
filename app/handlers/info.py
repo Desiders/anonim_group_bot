@@ -1,10 +1,26 @@
 from aiogram.types import Message
 
-from ..scripts.functions import get_text, rooms_active_and_inactive
+from ..scripts.functions import get_text
 
 
 async def command_info(call: Message, database):
-    server, rooms, users_count = await database.get_info()
-    rooms_count = rooms_active_and_inactive(rooms)
-
-    await call.answer(get_text('info').format(server, rooms_count, users_count))
+    arg = call.get_args()
+    server, rooms_count, users_count = await database.get_info()
+    if arg  != '+':
+        error_data = 'данные отсутствуют'
+        os_server = server['server'].get('os', error_data)
+        memory_use = server['memory'].get('used_memory_human', error_data)
+        memory_use_peak = server['memory'].get('used_memory_peak_human', error_data)
+        total_connections = server['stats'].get('total_connections_received', error_data)
+        total_commands = server['stats'].get('total_commands_processed', error_data)
+        instantaneous_sec = server['stats'].get('instantaneous_ops_per_sec', error_data)
+        keyspace = server['keyspace'].setdefault('db0', {}).get('keys', 0)
+        await call.answer(get_text('info').format(os_server, memory_use, memory_use_peak,
+                                                  total_connections, total_commands, instantaneous_sec,
+                                                  keyspace, rooms_count, users_count))
+    else:
+        memory = '\n'.join(f'{item[0]}:{item[1]}' for item in server.get('memory').items())
+        stats = '\n'.join(f'{item[0]}:{item[1]}' for item in server.get('stats').items())
+        keyspace = '\n'.join(f'{item[0]}:{item[1]}' for item in server.get('keyspace').items())
+        await call.answer(get_text('info_super').format(memory, stats, keyspace,
+                                                        rooms_count, users_count))

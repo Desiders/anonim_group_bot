@@ -1,11 +1,10 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.types.callback_query import CallbackQuery
 
-from ..scripts.functions import (get_text, rooms_appropriate_mode,
-                                 rooms_formatted_over_text)
+from ..scripts.functions import get_text, rooms_formatted, rooms_sorted
 
 
-async def command_rooms(call: Message, database) -> None:
+async def command_rooms(call: Message, database):
     inline_keyboards = [
         [   InlineKeyboardButton('Новые комнаты', callback_data='new_rooms'),
             InlineKeyboardButton('Старые комнаты', callback_data='old_rooms')],
@@ -19,14 +18,16 @@ async def command_rooms(call: Message, database) -> None:
 
 async def get_rooms(call: CallbackQuery, database):
     mode = call.data
-    rooms = await database.get_rooms()
-    rooms_mode = rooms_appropriate_mode(rooms, mode)
-    rooms_for_text = rooms_formatted_over_text(rooms_mode)
+    if mode.startswith('old'):
+        rooms = await database.get_rooms(True)
+    else:
+        rooms = await database.get_rooms(False)
+    random = mode.startswith('random')
+    rooms_mode = rooms_sorted(rooms, random)
+    rooms_for_text = rooms_formatted(rooms_mode)
     if not rooms_for_text:
-        # Если нет ни одной активной комнаты
         await call.message.answer(get_text('rooms_warning'))
     else:
-        # Если есть активные комнаты
         await call.message.answer(get_text('rooms_success').format(rooms_for_text))
-    # Отвечаем на callback
+
     await call.answer()

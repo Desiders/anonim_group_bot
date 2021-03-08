@@ -63,23 +63,20 @@ def new_object_over_type(type_object: str, input_object: Message, standart: dict
             return text
 
 
-def rooms_appropriate_mode(rooms: List[str], mode: str) -> List[str]:
-    available_rooms = [room for room in rooms if rooms[room] == '1'] # == '1' проверка на то, активна ли группа
-    length_rooms = len(available_rooms)
-    if mode.startswith('random'):
-        random.shuffle(available_rooms)
-        return available_rooms
+def rooms_sorted(rooms: List[str], random_: bool) -> List[str]:
+    if random_:
+        print(rooms, random_)
+        random.shuffle(rooms)
+        return rooms
 
+    length_rooms = len(rooms)
     iteration = length_rooms if length_rooms < 5 else 5
-    if mode.startswith('new'):
-        reverse_rooms = available_rooms[::-1]
-        rooms = reverse_rooms[:iteration]
-    else: # elif mode.startswith('old')
-        rooms = available_rooms[:iteration]
+    rooms = rooms[:iteration]
+
     return rooms
 
 
-def rooms_formatted_over_text(rooms: list) -> str:
+def rooms_formatted(rooms: list) -> str:
     if rooms == []:
         return
 
@@ -118,20 +115,3 @@ def indexes_formatted_over_text(length: int) -> str:
     indexes_over_text = ', '.join(indexes)
 
     return indexes_over_text
-
-
-def rooms_active_and_inactive(rooms: Dict[str, str]) -> Dict[str, str]:
-    rooms_create_count, rooms_active_count, rooms_inactive_count = 0, 0, 0
-    for room in rooms:
-        if rooms[room] == '1':
-            rooms_active_count += 1
-        else:
-            rooms_inactive_count += 1
-        rooms_create_count += 1
-    rooms_count = dict(all=rooms_create_count,
-                       active=rooms_active_count,
-                       inactive=rooms_inactive_count)
-    
-    return rooms_count
-    
-    

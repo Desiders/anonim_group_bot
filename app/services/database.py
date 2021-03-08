@@ -44,21 +44,20 @@ class RedisDB:
             if self._redis:
                 await self._redis.wait_closed()
 
-    #Новый пользователь
     async def add_user(self, user_id: int):
         redis = await self.redis()
 
         await redis.sadd(USERS_KEY, user_id)
 
-    # Активные комнаты
-    async def get_rooms(self) -> List[str]:
+    async def get_rooms(self, reverse: bool) -> List[str]:
         redis = await self.redis()
-
-        rooms = await redis.hgetall(ROOMS_KEY)
+        if reverse:
+            rooms = await redis.zrevrange(ROOMS_KEY, 0, -1)
+        else:
+            rooms = await redis.zrange(ROOMS_KEY, 0, -1)
 
         return rooms
 
-    # Получить информацию о текущей комнате
     async def get_room(self, user_id: int) -> Tuple[bool, Union[Tuple[str, int]]]:
         redis = await self.redis()
 
@@ -72,7 +71,6 @@ class RedisDB:
 
         return (True, (room_id, length))
 
-    # Создать новую комнату
     async def new_room(self, user_id: int) -> Tuple[Union[bool, str]]:
         redis = await self.redis()
 
@@ -83,16 +81,14 @@ class RedisDB:
 
         room_id = generate_room_id()
         key_room = generate_key(ROOM_KEY, room_id)
-
         transaction = redis.multi_exec()
         transaction.set(key_user, room_id)
-        transaction.hset(ROOMS_KEY, room_id, 1)
+        transaction.zadd(ROOMS_KEY, 1, room_id, exist='ZSET_IF_NOT_EXIST')
         transaction.rpush(key_room, user_id)
         await transaction.execute()
 
         return (..., room_id)
 
-    # Вступить в комнату по номеру
     async def join_room(self, user_id: int, join_id_room: str) -> Tuple[Union[None, bool, Tuple[bool,
                                                                                                 Dict[str, str],
                                                                                                 List[int]]]]:
@@ -122,7 +118,6 @@ class RedisDB:
 
         return (True, (join_id_room, user_profile, users))
     
-    # Выход из комнаты
     async def end_room(self, user_id: int) -> Tuple[Union[None, bool, str]]:
         redis = await self.redis()
 
@@ -140,12 +135,11 @@ class RedisDB:
         delete = not result[-1]
         if delete:
             transaction = redis.multi_exec()
-            transaction.hset(ROOMS_KEY, room_id, 0)
+            transaction.zrem(ROOMS_KEY, room_id)
             transaction.unlink(key_room)
             await transaction.execute()
         return (delete, room_id)
 
-    # Получить временные номера участников комнаты
     async def get_members(self, user_id: int) -> Union[None, int]:
         redis = await self.redis()
 
@@ -159,8 +153,7 @@ class RedisDB:
 
         return length
 
-    # Исключение пользователя из комнаты по его временному номеру
-    async def kick_user_over_id_from_room(self, user_id: int, kick_user_index: int) -> Tuple[Union[None, bool,
+    async def kick_user(self, user_id: int, kick_user_index: int) -> Tuple[Union[None, bool,
                                                                                                     int, list]]:
         redis = await self.redis()
 
@@ -191,7 +184,6 @@ class RedisDB:
 
         return (True, [kick_user_index, kick_user_nickname, room_id, kick_user_id, users])
 
-    # Изменение номера комнаты на случайный
     async def change_id_room(self, user_id: int) -> Tuple[Union[None, bool, str]]:
         redis = await self.redis()
 
@@ -213,14 +205,13 @@ class RedisDB:
 
         transaction = redis.multi_exec()
         transaction.mset(migrate_users_room)
-        transaction.hdel(ROOMS_KEY, room_id)
-        transaction.hset(ROOMS_KEY, new_id_room, 1)
+        transaction.zrem(ROOMS_KEY, room_id)
+        transaction.zadd(ROOMS_KEY, 1, new_id_room)
         transaction.rename(key_room, new_key_room)
         await transaction.execute()
 
         return (True, new_id_room)
     
-    # Получение своего профиля
     async def get_my_profile(self, user_id: int) -> Dict[str, str]:
         redis = await self.redis()
 
@@ -229,7 +220,6 @@ class RedisDB:
 
         return user_profile
     
-    # Получение чужого профиля
     async def get_profile(self, user_id: int, user_index: int) -> Union[None, bool, Dict[str, str]]:
         redis = await self.redis()
 
@@ -248,14 +238,12 @@ class RedisDB:
 
         return user_profile
 
-    # Редактирование профиля
     async def edit_profile(self, user_id: int, type_object: str, new_object: str):
         redis = await self.redis()
 
         key_user_profile = generate_key(PROFILE_KEY, user_id)
         await redis.hset(key_user_profile, type_object, new_object)
     
-    # Получить временные номера участников комнаты для отправки сообщения
     async def get_members_over_send(self, user_id: int) -> Union[Tuple[bool, Dict[str, str], List[str]]]:
         redis = await self.redis()
 
@@ -277,16 +265,15 @@ class RedisDB:
         author['user_index'] = users.index(str(user_id))
 
         return (author, users)
-    
-    # Информация о работе бота
+
     async def get_info(self):
         redis = await self.redis()
 
         server = await redis.info('all')
         
         transaction = redis.multi_exec()
-        transaction.hgetall(ROOMS_KEY)
+        transaction.zcard(ROOMS_KEY)
         transaction.scard(USERS_KEY)
-        rooms, users_count = await transaction.execute()
+        rooms_count, users_count = await transaction.execute()
 
-        return server, rooms, users_count
+        return server, rooms_count, users_count
