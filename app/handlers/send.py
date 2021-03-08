@@ -33,9 +33,12 @@ async def send_media_group(call: Message, state: FSMContext):
 
 async def send_media_single(call: Message, caption: str, author: Dict[str, str], users: List[str]) -> None:
     content_type = call.content_type
-    warning_content_types = ['poll', 'contact', 'video_note', 'sticker', 'dice', 'location']
-    if content_type in warning_content_types:
-        return await call.answer(get_text('send_warning'))
+    access_content_types = ['text', 'audio', 'document', 'photo', 'video', 'animation', 'voice']
+    ignore_content_types = ['pinned_message']
+    if content_type not in access_content_types:
+        if content_type in ignore_content_types:
+            return
+        return await call.reply(get_text('send_warning'))
     if content_type == 'text':
         for user_id in users:
             await asyncio.sleep(config.standart.time_sleep_new_message)
@@ -107,11 +110,11 @@ async def command_send(call: Message, state: FSMContext, database) -> None:
         return
 
     if not users:
-        return await call.answer(get_text('send_warning_no_have'))
+        return await call.reply(get_text('send_warning_no_have'))
 
     caption = get_caption(call, author)
     if caption is None:
-        return await call.answer(get_text('send_warning_long'))
+        return await call.reply(get_text('send_warning_long'))
 
     del users[author["user_index"]]
     if 'media_group_id' in call:

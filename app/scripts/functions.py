@@ -65,7 +65,6 @@ def new_object_over_type(type_object: str, input_object: Message, standart: dict
 
 def rooms_sorted(rooms: List[str], random_: bool) -> List[str]:
     if random_:
-        print(rooms, random_)
         random.shuffle(rooms)
         return rooms
 
