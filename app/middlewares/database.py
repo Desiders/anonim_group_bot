@@ -13,11 +13,6 @@ class DatabaseMiddleware(BaseMiddleware):
     async def pre_process(self, call: Union[Message, CallbackQuery], data: dict):
         data["database"] = self.database
 
-    """
-    async def post_process(self, call: Union[Message, CallbackQuery], data: dict):
-        pass
-    """
-
     async def trigger(self, action, args):
         call, *_, data = args
         if action == 'pre_process_message' or action == 'pre_process_callback_query':
@@ -25,7 +20,3 @@ class DatabaseMiddleware(BaseMiddleware):
         else:
             return False
         return True
-        """
-        elif action == 'post_process_message' or action == 'post_process_callback_query':
-            await self.post_process(call, data)
-        """
