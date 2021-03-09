@@ -25,7 +25,8 @@ class StandartValueConfig:
     standart_description: str
     time_sleep_new_member: float
     time_sleep_end_member: float
-    time_sleep_new_message: float
+    time_sleep_new_message_single: float
+    time_sleep_new_message_group: float
 
 
 @dataclass
@@ -57,4 +58,5 @@ def load_config(path: str) -> Config:
                       standart_description=standart['standart_description'],
                       time_sleep_new_member=float(standart['time_sleep_new_member']),
                       time_sleep_end_member=float(standart['time_sleep_end_member']),
-                      time_sleep_new_message=float(standart['time_sleep_new_message'])))
+                      time_sleep_new_message_single=float(standart['time_sleep_new_message_single']),
+                      time_sleep_new_message_group=float(standart['time_sleep_new_message_group'])))

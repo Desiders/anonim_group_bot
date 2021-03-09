@@ -22,12 +22,10 @@ async def send_media_group(call: Message, state: FSMContext):
         media, users = data[call.media_group_id]['media'], data[call.media_group_id]['users']
         media_group = get_album(media)
         for user_id in users:
-            await time_sleep('new_message')
+            await time_sleep('new_message_group')
             try:
                 await call.bot.send_media_group(user_id, media_group)
             except: ...
-
-    await call.reply(get_text('send_access'))
 
 
 async def send_media_single(call: Message, caption: str, author: Dict[str, str], users: List[str]) -> None:
@@ -40,35 +38,23 @@ async def send_media_single(call: Message, caption: str, author: Dict[str, str],
         return await call.reply(get_text('send_warning'))
     if content_type == 'text':
         for user_id in users:
-            await time_sleep('new_message')
+            await time_sleep('new_message_single')
             try:
                 await call.bot.send_message(user_id, caption, parse_mode='')
             except: ...
     else:
         from_chat_id, message_id = call.chat.id, call.message_id
         for user_id in users:
-            await time_sleep('new_message')
+            await time_sleep('new_message_single')
             try:
                 await call.bot.copy_message(user_id, from_chat_id, message_id,
                                             caption=caption, parse_mode='')
             except: ...
 
-    await call.reply(get_text('send_access'))
-
 
 def get_media_for_album(call: Message, caption: str) -> Union[None, object]:
     content_type = call.content_type
-    if content_type == 'audio':
-        audio = call.audio.file_id
-        duration = call.audio.duration
-        performer = call.audio.performer
-        title = call.audio.file_name
-        media = InputMediaAudio(media=audio, caption=caption, duration=duration,
-                                performer=performer, title=title, parse_mode='')
-    elif content_type == 'document':
-        document = call.document.file_id
-        media = InputMediaDocument(media=document, caption=caption, parse_mode='')
-    elif content_type == 'photo':
+    if content_type == 'photo':
         photo = call.photo[-1].file_id
         media = InputMediaPhoto(media=photo, caption=caption, parse_mode='')
     elif content_type == 'video':
@@ -78,6 +64,16 @@ def get_media_for_album(call: Message, caption: str) -> Union[None, object]:
         duration = call.video.duration
         media = InputMediaVideo(media=video, caption=caption, width=width,
                                 height=height, duration=duration, parse_mode='')
+    elif content_type == 'document':
+        document = call.document.file_id
+        media = InputMediaDocument(media=document, caption=caption, parse_mode='')
+    elif content_type == 'audio':
+        audio = call.audio.file_id
+        duration = call.audio.duration
+        performer = call.audio.performer
+        title = call.audio.file_name
+        media = InputMediaAudio(media=audio, caption=caption, duration=duration,
+                                performer=performer, title=title, parse_mode='')
     else:
         return
 
@@ -118,7 +114,7 @@ async def command_send(call: Message, state: FSMContext, database) -> None:
     if 'media_group_id' in call:
         async with state.proxy() as data:
             if call.media_group_id not in data:
-                asyncio.get_event_loop().call_later(1, asyncio.create_task, send_media_group(call, state))
+                asyncio.get_event_loop().call_later(1.5, asyncio.create_task, send_media_group(call, state))
             else:
                 caption = ''
             media = get_media_for_album(call, caption)
@@ -128,5 +124,5 @@ async def command_send(call: Message, state: FSMContext, database) -> None:
             standart_values = {'media': [], 'users': users}
             data._data.setdefault(call.media_group_id, standart_values)['media'].append(media)
     else:
-        asyncio.get_event_loop().call_later(0.2, asyncio.create_task, send_media_single(call, caption,
+        asyncio.get_event_loop().call_later(0.1, asyncio.create_task, send_media_single(call, caption,
                                                                                         author, users))

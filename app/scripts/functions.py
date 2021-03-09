@@ -140,8 +140,10 @@ def get_photo(profile: dict) -> Union[str, None]:
 
 
 async def time_sleep(type_sleep: str):
-    if type_sleep == 'new_message':
-        await asyncio.sleep(config.standart.time_sleep_new_message)
+    if type_sleep == 'new_message_single':
+        await asyncio.sleep(config.standart.time_sleep_new_message_single)
+    elif type_sleep == 'new_message_group':
+        await asyncio.sleep(config.standart.time_sleep_new_message_group)
     elif type_sleep == 'new_member':
         await asyncio.sleep(config.standart.time_sleep_new_member)
     elif type_sleep == 'end_member':
