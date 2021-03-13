@@ -244,7 +244,7 @@ class RedisDB:
         key_user_profile = generate_key(PROFILE_KEY, user_id)
         await redis.hset(key_user_profile, type_object, new_object)
     
-    async def get_members_over_send(self, user_id: int) -> Union[Tuple[bool, Dict[str, str], List[str]]]:
+    async def get_members_over_send(self, user_id: int) -> Union[None, Tuple[bool, Dict[str, str], List[str]]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)

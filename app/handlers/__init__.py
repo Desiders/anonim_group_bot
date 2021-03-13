@@ -1,15 +1,13 @@
 from aiogram import Dispatcher
-from aiogram.dispatcher.filters import Text
 
 
 def register_handlers(dispatcher: Dispatcher) -> None:
-    from aiogram.dispatcher.filters import CommandHelp, CommandStart
+    from aiogram.dispatcher.filters import CommandHelp, CommandStart, Text
     from aiogram.types.message import ContentType
 
     from .change import command_change
     from .commands import command_commands
     from .create import command_create
-    from .donate import command_donate
     from .edit import EditCache, command_edit, join_number, join_object
     from .get import command_get
     from .help import command_help
@@ -43,15 +41,15 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     dispatcher.register_message_handler(command_leave,
                                         commands=['leave', 'покинуть'])
     dispatcher.register_message_handler(command_members,
-                                        commands=['members', 'участники'])
+                                        commands=['members', 'участники', 'члены'])
     dispatcher.register_message_handler(command_kick,
                                         commands=['kick', 'исключить'])
     dispatcher.register_message_handler(command_change,
                                         commands=['change', 'поменять'])
-    dispatcher.register_message_handler(command_profile,
-                                        commands=['profile', 'профиль'])
     dispatcher.register_message_handler(command_get,
                                         commands=['get', 'получить'])
+    dispatcher.register_message_handler(command_profile,
+                                        commands=['profile', 'профиль'])
     dispatcher.register_message_handler(command_edit,
                                         commands=['edit', 'изменить'])
     dispatcher.register_message_handler(join_number,
@@ -62,7 +60,5 @@ def register_handlers(dispatcher: Dispatcher) -> None:
                                         content_types=ContentType.ANY)
     dispatcher.register_message_handler(command_info,
                                         commands=['info', 'информация'])
-    dispatcher.register_message_handler(command_donate,
-                                        commands=['donate', 'пожертвовать'])
     dispatcher.register_message_handler(command_send,
                                         content_types=ContentType.ANY)

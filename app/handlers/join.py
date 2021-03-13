@@ -31,7 +31,7 @@ async def notify_users(call: Message, args: Tuple[str, Dict[str, str], List[str]
 
 
 async def command_join(call: Message, database) -> None:
-    join_id_room = call.get_args()
+    join_id_room = (call.get_args()).replace(' ', '')
     if not join_id_room:
         return await call.answer(get_text('join_no_args'))
 

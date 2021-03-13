@@ -35,7 +35,7 @@ async def send_media_single(call: Message, caption: str, author: Dict[str, str],
     if content_type not in access_content_types:
         if content_type in ignore_content_types:
             return
-        return await call.reply(get_text('send_warning'))
+        return await call.reply(get_text('send_warning_single'))
     if content_type == 'text':
         for user_id in users:
             await time_sleep('new_message_single')
@@ -63,7 +63,8 @@ def get_media_for_album(call: Message, caption: str) -> Union[None, object]:
         height = call.video.height
         duration = call.video.duration
         media = InputMediaVideo(media=video, caption=caption, width=width,
-                                height=height, duration=duration, parse_mode='')
+                                height=height, duration=duration, parse_mode='',
+                                supports_streaming=True)
     elif content_type == 'document':
         document = call.document.file_id
         media = InputMediaDocument(media=document, caption=caption, parse_mode='')
@@ -100,11 +101,8 @@ def get_caption(call: Message, author: Dict[str, str]) -> Union[None, str]:
 
 async def command_send(call: Message, state: FSMContext, database) -> None:
     author, users = await database.get_members_over_send(call.from_user.id)
-    if users is None:
-        return
-
     if not users:
-        return await call.reply(get_text('send_warning_no_have'))
+        return
 
     caption = get_caption(call, author)
     if caption is None:
