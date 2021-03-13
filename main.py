@@ -2,8 +2,7 @@ from typing import NoReturn
 
 
 async def main() -> NoReturn:
-    from aiogram.contrib.middlewares.logging import LoggingMiddleware
-
+    # from aiogram.contrib.middlewares.logging import LoggingMiddleware
     from app import register_handlers
     from app.middlewares.database import DatabaseMiddleware
     from app.services.database import RedisDB
@@ -15,9 +14,9 @@ async def main() -> NoReturn:
                        password=config.redis.password,
                        db=config.redis.db)
 
-    logger.info("Setup Middlewares")
+    logger.info("Setup Middleware")
     dispatcher.middleware.setup(DatabaseMiddleware(database))
-    dispatcher.middleware.setup(LoggingMiddleware(logger))
+    # dispatcher.middleware.setup(LoggingMiddleware(logger))
 
     logger.info("Register Handlers")
     register_handlers(dispatcher)
