@@ -1,5 +1,9 @@
+from aiogram import executor
 from aiogram.dispatcher.dispatcher import Dispatcher
 
+from app import register_handlers
+from app.filters import setup_filters
+from app.middlewares.database import DatabaseMiddleware
 from app.services.database import RedisDB
 from loader import config, dispatcher, logger
 
@@ -15,12 +19,6 @@ async def shutdown(dispatcher: Dispatcher):
 
 
 def main():
-    from aiogram import executor
-
-    from app import register_handlers
-    from app.filters import setup_filters
-    from app.middlewares.database import DatabaseMiddleware
-
     dispatcher.middleware.setup(DatabaseMiddleware(database))
 
     setup_filters(dispatcher)
