@@ -9,6 +9,7 @@ def register_handlers(dispatcher: Dispatcher):
     from .commands import command_commands
     from .create import command_create
     from .edit import EditCache, command_edit, join_number, join_object
+    from .error import command_error
     from .get import command_get
     from .help import command_help
     from .info import command_info
@@ -19,7 +20,7 @@ def register_handlers(dispatcher: Dispatcher):
     from .profile import command_profile
     from .room import command_room
     from .rooms import command_rooms, get_rooms
-    from .send import command_send_single, command_send_album
+    from .send import command_send_album, command_send_single
     from .start import command_start
 
     dispatcher.register_message_handler(command_start,
@@ -65,3 +66,4 @@ def register_handlers(dispatcher: Dispatcher):
                                         content_types=ContentType.ANY)
     dispatcher.register_message_handler(command_send_single,
                                         content_types=ContentType.ANY)
+    dispatcher.register_errors_handler(command_error)
