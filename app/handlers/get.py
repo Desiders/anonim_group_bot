@@ -8,17 +8,13 @@ async def command_get(call: Message, database) -> None:
     user_index = call.get_args()
     if not user_index:
         return await call.answer(get_text('get_no_args'))
-    
     if not validate_get_user_index(user_index):
         return await call.answer(get_text('get_warning_no_have').format(user_index))
-
     profile = await database.get_profile(call.from_user.id, int(user_index))
     if profile is None:
         return await call.answer(get_text('get_warning'))
-
     if not profile and profile != {}:
         return await call.answer(get_text('get_warning_no_have').format(user_index))
-
     nickname = get_name(profile)
     description = get_description(profile)
     photo = get_photo(profile)

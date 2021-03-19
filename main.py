@@ -1,35 +1,34 @@
-from typing import NoReturn
+from aiogram.dispatcher.dispatcher import Dispatcher
+
+from app.services.database import RedisDB
+from loader import config, dispatcher, logger
+
+database = RedisDB(host=config.redis.host,
+                   port=config.redis.port,
+                   password=config.redis.password,
+                   db=config.redis.db)
+
+async def shutdown(dispatcher: Dispatcher):
+    logger.info("Close connections")
+    await database.close()
+    await database.wait_closed()
 
 
-async def main() -> NoReturn:
-    # from aiogram.contrib.middlewares.logging import LoggingMiddleware
+def main():
+    from aiogram import executor
+
     from app import register_handlers
+    from app.filters import setup_filters
     from app.middlewares.database import DatabaseMiddleware
-    from app.services.database import RedisDB
-    from loader import config, dispatcher, logger
 
-    logger.info("Setup RedisDB")
-    database = RedisDB(host=config.redis.host,
-                       port=config.redis.port,
-                       password=config.redis.password,
-                       db=config.redis.db)
-
-    logger.info("Setup Middleware")
     dispatcher.middleware.setup(DatabaseMiddleware(database))
-    # dispatcher.middleware.setup(LoggingMiddleware(logger))
 
-    logger.info("Register Handlers")
+    setup_filters(dispatcher)
     register_handlers(dispatcher)
 
     logger.warning("Starting Bot")
-    try:
-        await dispatcher.start_polling()
-    finally:
-        await database.close()
-        await database.wait_closed()
-        await dispatcher.bot.session.close()
+    executor.start_polling(dispatcher, skip_updates=True, on_shutdown=shutdown)
 
 
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    main()

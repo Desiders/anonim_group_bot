@@ -20,7 +20,6 @@ async def notify_users(call: Message, args: Tuple[str, Dict[str, str], List[str]
                 await call.bot.send_photo(chat_id=user_id,  photo=photo,
                                           caption=text, parse_mode='')
             except: ...
-    # Отправляем сообщения, если фотография отсутствует в профиле
     else:
         for user_id in users:
             await time_sleep('new_member')
@@ -34,10 +33,8 @@ async def command_join(call: Message, database) -> None:
     join_id_room = (call.get_args()).replace(' ', '')
     if not join_id_room:
         return await call.answer(get_text('join_no_args'))
-
     if not validate_room_id(join_id_room):
         return await call.answer(get_text('join_warning').format(join_id_room))
-
     result, args = await database.join_room(call.from_user.id, join_id_room)
     if result is None:
         command_trigger = 'join_warning'

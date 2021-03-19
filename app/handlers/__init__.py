@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 
 
-def register_handlers(dispatcher: Dispatcher) -> None:
+def register_handlers(dispatcher: Dispatcher):
     from aiogram.dispatcher.filters import CommandHelp, CommandStart, Text
     from aiogram.types.message import ContentType
 
@@ -19,7 +19,7 @@ def register_handlers(dispatcher: Dispatcher) -> None:
     from .profile import command_profile
     from .room import command_room
     from .rooms import command_rooms, get_rooms
-    from .send import command_send
+    from .send import command_send_single, command_send_album
     from .start import command_start
 
     dispatcher.register_message_handler(command_start,
@@ -60,5 +60,8 @@ def register_handlers(dispatcher: Dispatcher) -> None:
                                         content_types=ContentType.ANY)
     dispatcher.register_message_handler(command_info,
                                         commands=['info', 'информация'])
-    dispatcher.register_message_handler(command_send,
+    dispatcher.register_message_handler(command_send_album,
+                                        is_media_group=True,
+                                        content_types=ContentType.ANY)
+    dispatcher.register_message_handler(command_send_single,
                                         content_types=ContentType.ANY)

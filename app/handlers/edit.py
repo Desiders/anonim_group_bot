@@ -1,7 +1,6 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message
-from loader import config
 
 from ..scripts.functions import get_text, validate_object
 
@@ -31,7 +30,6 @@ async def join_number(call: Message, state: FSMContext) -> None:
     information = MATCHES_NUMBERS.get(number_object)
     if not information:
         return await no_correct_object(call, state, 'edit_number_warning', number_object)
-
     type_object = information['type_object']
     type_object_for_text = information['type_object_for_text']
     acceptable_type_object = information['acceptable_type_object']
@@ -41,7 +39,7 @@ async def join_number(call: Message, state: FSMContext) -> None:
         data['acceptable_type_object'] = acceptable_type_object
     await state.set_state(EditCache.new_object)
 
-    await call.answer(get_text('edit_number_success').format(type_object_for_text))
+    await call.reply(get_text('edit_number_success').format(type_object_for_text))
 
 
 async def join_object(call: Message, state: FSMContext, database) -> None:
@@ -50,19 +48,11 @@ async def join_object(call: Message, state: FSMContext, database) -> None:
     type_object_for_text = information['type_object_for_text']
     if call.content_type != acceptable_type_objects:
         return await no_correct_object(call, state, 'edit_object_warning', type_object_for_text)
-
     type_object = information['type_object']
-    standart = dict(
-        min_length_nickname=config.standart.min_length_nickname,
-        max_length_nickname=config.standart.max_length_nickname,
-        min_length_description=config.standart.min_length_description,
-        max_length_description=config.standart.max_length_description,
-    )
-    new_object = validate_object(type_object, call, standart)
-    if not new_object:
-        arguments = tuple(standart.values())
+    new_object = validate_object(call, type_object)
+    if isinstance(new_object, tuple):
+        arguments = new_object
         return await no_correct_object(call, state, 'edit_object_restriction_warning', arguments)
-
     await state.finish()
     await database.edit_profile(call.from_user.id, type_object, new_object)
 

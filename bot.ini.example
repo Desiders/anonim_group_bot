@@ -1,11 +1,11 @@
 [BotConfig]
-token=1627118869:AAEQPsjWv7bNkQ8AssRYhvXwNN5L-_JRok8
+token=
 
 [RedisConfig]
-host=redis-15101.c239.us-east-1-2.ec2.cloud.redislabs.com
-port=15101
-password=GWue9aQMK0xwOQuYHP3XQt4jEIjgB2H7
-db=0
+host=
+port=
+password=
+db=
 
 [StandartValueConfig]
 min_length_nickname=4

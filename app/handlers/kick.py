@@ -26,7 +26,6 @@ async def command_kick(call: Message, database) -> None:
     kick_user_id = call.get_args()
     if not kick_user_id:
         return await call.answer(get_text('kick_no_args'))
-
     access, text = validate_kick_user_index(kick_user_id, MAX_LENGTH_ROOM)
     if not access:
         if text == 'no_number' or text == 'long_id':
@@ -34,7 +33,6 @@ async def command_kick(call: Message, database) -> None:
         else: # elif text == 'kick_admin'
             command_trigger = 'kick_warning_admin'
         return await call.answer(get_text(command_trigger).format(kick_user_id), parse_mode='')
-
     user, parts = await database.kick_user(call.from_user.id, int(kick_user_id))
     if not user:
         command_trigger = 'kick_warning' if user is None else 'kick_warning_no_have'

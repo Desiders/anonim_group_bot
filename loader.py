@@ -13,13 +13,13 @@ def get_config():
     return load_config("bot.ini")
 
 
-def get_dispatcher():
+def get_dispatcher(token):
     from aiogram import Bot, Dispatcher
     from aiogram.contrib.fsm_storage.memory import MemoryStorage
     from aiogram.types import ParseMode
 
-    return Dispatcher(Bot(token=config.bot.token, parse_mode=ParseMode.HTML), storage=MemoryStorage())
+    return Dispatcher(Bot(token=token, parse_mode=ParseMode.HTML), storage=MemoryStorage())
 
 logger = get_logger()
 config = get_config()
-dispatcher = get_dispatcher()
+dispatcher = get_dispatcher(config.bot.token)
