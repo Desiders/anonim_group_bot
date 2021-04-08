@@ -30,7 +30,7 @@ def main():
     from aiogram import executor
 
     executor.start_polling(dispatcher,
-                           skip_updates=True,
+                           skip_updates=False,
                            on_startup=startup,
                            on_shutdown=shutdown)
 
