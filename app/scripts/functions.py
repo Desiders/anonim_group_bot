@@ -1,7 +1,7 @@
-import asyncio
-import json
-import random
-from typing import List, Tuple, Union
+from asyncio import sleep
+from json import load
+from random import randrange, shuffle
+from typing import List, Optional, Tuple
 
 from aiogram.types.message import Message
 from loader import config
@@ -14,7 +14,7 @@ TIME_SLEEP_BY_TYPE = {'new_message_single': config.standart.time_sleep_new_messa
 
 def get_text(command: str) -> str:
     with open(f'app/wording/commands.json', encoding='utf-8') as commands:
-        commands = json.load(commands)
+        commands = load(commands)
         command = commands[command]
         return command
 
@@ -26,7 +26,7 @@ def generate_key(*parts: Tuple[str, int]) -> str:
 
 def generate_room_id(mod: bool = False) -> str:
     iterations = 4 if mod else 3
-    random_numbers = (random.randrange(1, 1000) for _ in range(iterations))
+    random_numbers = (randrange(1, 1000) for _ in range(iterations))
     room_id = "-".join(tuple(map(str, random_numbers)))
     return room_id
 
@@ -51,7 +51,7 @@ def validate_room_id(room_id: str) -> bool:
     return True
 
 
-def validate_object(input_object: Message, type_object: str) -> Union[str, None]:                    
+def validate_object(input_object: Message, type_object: str) -> Optional[str]:                    
     if type_object == 'photo':
         return input_object.photo[-1].file_id
     if type_object == 'nickname' or type_object == 'description':
@@ -73,7 +73,7 @@ def validate_object(input_object: Message, type_object: str) -> Union[str, None]
 
 def rooms_sorted(rooms: List[str], random_: bool) -> List[str]:
     if random_:
-        random.shuffle(rooms)
+        shuffle(rooms)
         return rooms
     length_rooms = len(rooms)
     iteration = length_rooms if length_rooms < 5 else 5
@@ -91,7 +91,7 @@ def rooms_formatted(rooms: list) -> str:
     return rooms_over_text
 
 
-def validate_kick_user_index(kick_user_id: str, max_users_id: int) -> Tuple[Union[bool, str]]:
+def validate_kick_user_index(kick_user_id: str, max_users_id: int) -> Tuple[bool, Optional[str]]:
     if not kick_user_id.isdecimal():
         return (False, 'no_number')
     if kick_user_id == '0':
@@ -129,10 +129,10 @@ def get_description(profile: dict) -> str:
     return description
 
 
-def get_photo(profile: dict) -> Union[str, None]:
+def get_photo(profile: dict) -> Optional[str]:
     photo = profile.get('photo')
     return photo
 
 
-async def time_sleep(type_sleep: str):
-    await asyncio.sleep(TIME_SLEEP_BY_TYPE[type_sleep])
+async def time_sleep(type_sleep: str) -> None:
+    await sleep(TIME_SLEEP_BY_TYPE[type_sleep])

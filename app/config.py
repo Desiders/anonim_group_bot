@@ -1,4 +1,3 @@
-import configparser
 from dataclasses import dataclass
 
 
@@ -37,7 +36,9 @@ class Config:
 
 
 def load_config(path: str) -> Config:
-    config = configparser.ConfigParser()
+    from configparser import ConfigParser
+
+    config = ConfigParser()
     config.read(path, encoding='utf-8')
 
     redis_config = config['RedisConfig']

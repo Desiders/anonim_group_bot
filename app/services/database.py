@@ -1,4 +1,4 @@
-import asyncio
+from asyncio import Lock, get_event_loop
 from typing import Dict, List, Optional, Tuple, Union
 
 import aioredis
@@ -20,10 +20,9 @@ class RedisDB:
         self._port = port
         self._password = password
         self._db = db
-        self._loop = asyncio.get_event_loop()
 
         self._redis: Optional[aioredis.RedisConnection] = None
-        self._connection_lock = asyncio.Lock(loop=self._loop)
+        self._connection_lock = Lock(loop=get_event_loop())
     
     async def redis(self) -> aioredis.Redis:
         async with self._connection_lock:
@@ -57,7 +56,7 @@ class RedisDB:
             rooms = await redis.zrange(ROOMS_KEY, 0, -1)
         return rooms
 
-    async def get_room(self, user_id: int) -> Tuple[bool, Union[Tuple[str, int]]]:
+    async def get_room(self, user_id: int) -> Tuple[bool, Optional[Tuple[str, int]]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -68,7 +67,7 @@ class RedisDB:
         length = await redis.llen(key_room)
         return (True, (room_id, length))
 
-    async def new_room(self, user_id: int) -> Tuple[Union[bool, str]]:
+    async def new_room(self, user_id: int) -> Tuple[Union[bool, str, None]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -85,9 +84,9 @@ class RedisDB:
         await transaction.execute()
         return (..., room_id)
 
-    async def join_room(self, user_id: int, join_id_room: str) -> Tuple[Union[None, bool, Tuple[bool,
-                                                                                                Dict[str, str],
-                                                                                                List[int]]]]:
+    async def join_room(self,
+                        user_id: int,
+                        join_id_room: str) -> Tuple[Union[None, bool, Tuple[bool, Dict[str, str], List[int]]]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -133,7 +132,7 @@ class RedisDB:
             await transaction.execute()
         return (delete, room_id)
 
-    async def get_members(self, user_id: int) -> Union[None, int]:
+    async def get_members(self, user_id: int) -> Optional[int]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -144,8 +143,9 @@ class RedisDB:
         length = await redis.llen(key_room)
         return length
 
-    async def kick_user(self, user_id: int, kick_user_index: int) -> Tuple[Union[None, bool,
-                                                                                                    int, list]]:
+    async def kick_user(self,
+                        user_id: int,
+                        kick_user_index: int) -> Tuple[Union[None, bool, int, list]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -203,7 +203,9 @@ class RedisDB:
         user_profile = await redis.hgetall(key_user_profile)
         return user_profile
     
-    async def get_profile(self, user_id: int, user_index: int) -> Union[None, bool, Dict[str, str]]:
+    async def get_profile(self,
+                          user_id: int,
+                          user_index: int) -> Union[None, bool, Dict[str, str]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -218,13 +220,16 @@ class RedisDB:
         user_profile = await redis.hgetall(key_user_profile)
         return user_profile
 
-    async def edit_profile(self, user_id: int, type_object: str, new_object: str):
+    async def edit_profile(self,
+                           user_id: int,
+                           type_object: str,
+                           new_object: str) -> None:
         redis = await self.redis()
 
         key_user_profile = generate_key(PROFILE_KEY, user_id)
         await redis.hset(key_user_profile, type_object, new_object)
     
-    async def get_members_over_send(self, user_id: int) -> Union[None, Tuple[bool, Dict[str, str], List[str]]]:
+    async def get_members_over_send(self, user_id: int) -> Tuple[Union[None, bool, Dict[str, str], List[str]]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -243,7 +248,7 @@ class RedisDB:
         author['user_index'] = users.index(str(user_id))
         return (author, users)
 
-    async def get_info(self):
+    async def get_info(self) -> Tuple[Dict[str, Union[str, int]], int]:
         redis = await self.redis()
 
         server = await redis.info('all')
@@ -252,4 +257,4 @@ class RedisDB:
         transaction.zcard(ROOMS_KEY)
         transaction.scard(USERS_KEY)
         rooms_count, users_count = await transaction.execute()
-        return server, rooms_count, users_count
+        return (server, rooms_count, users_count)
