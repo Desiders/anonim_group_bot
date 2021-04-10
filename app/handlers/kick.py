@@ -1,28 +1,34 @@
 import asyncio
 
 from aiogram.types import Message
+from app.services.database import RedisDB
 
 from ..scripts.functions import (get_name, get_text, time_sleep,
                                  validate_kick_user_index)
 from ..services.database import MAX_LENGTH_ROOM
 
 
-async def notify_users(call: Message, access_or_args: list):
+async def notify_users(call: Message, access_or_args: list) -> None:
     user_index, user_nickname, room_id, user_id, users = access_or_args
     del (users[user_index], users[0])
     try:
-        await call.bot.send_message(user_id, get_text('kick_notify').format(room_id),
+        await call.bot.send_message(user_id,
+                                    get_text('kick_notify').format(room_id),
                                     disable_web_page_preview=True)
-    except: ...
+    except:
+        pass
     for user_id in users:
         await time_sleep('end_member')
         try:
-            await call.bot.send_message(user_id, get_text('kick_notify_all').format(user_index, user_nickname),
-                                        disable_web_page_preview=True, parse_mode='')
-        except: ...
+            await call.bot.send_message(user_id,
+                                        get_text('kick_notify_all').format(user_index, user_nickname),
+                                        disable_web_page_preview=True,
+                                        parse_mode='')
+        except:
+            pass
 
 
-async def command_kick(call: Message, database) -> None:
+async def command_kick(call: Message, database: RedisDB) -> None:
     kick_user_id = call.get_args()
     if not kick_user_id:
         return await call.answer(get_text('kick_no_args'))
@@ -43,7 +49,9 @@ async def command_kick(call: Message, database) -> None:
         nickname = parts[1]
         if not nickname:
             parts[1]  = get_name()
-        asyncio.get_event_loop().call_later(0.2, asyncio.create_task, notify_users(call, parts))
+        asyncio.get_event_loop().call_later(0.2,
+                                            asyncio.create_task,
+                                            notify_users(call, parts))
 
     await call.answer(get_text(command_trigger).format(parts),
                       disable_web_page_preview=True, parse_mode='')

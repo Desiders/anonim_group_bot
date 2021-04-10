@@ -1,9 +1,10 @@
 from aiogram.types import Message
+from app.services.database import RedisDB
 
 from ..scripts.functions import get_text
 
 
-async def command_leave(call: Message, database):
+async def command_leave(call: Message, database: RedisDB):
     result, args = await database.end_room(call.from_user.id)
     if result is None:
         command_trigger = 'leave_warning'

@@ -1,6 +1,7 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message
+from app.services.database import RedisDB
 
 from ..scripts.functions import get_text, validate_object
 
@@ -19,7 +20,7 @@ class EditCache(StatesGroup):
     new_object = State()
 
 
-async def command_edit(call: Message, state: FSMContext):
+async def command_edit(call: Message, state: FSMContext) -> None:
     await state.set_state(EditCache.number_object.state)
 
     await call.answer(get_text('edit'))
@@ -42,7 +43,9 @@ async def join_number(call: Message, state: FSMContext) -> None:
     await call.reply(get_text('edit_number_success').format(type_object_for_text))
 
 
-async def join_object(call: Message, state: FSMContext, database) -> None:
+async def join_object(call: Message,
+                      state: FSMContext,
+                      database: RedisDB) -> None:
     information = await state.get_data()
     acceptable_type_objects = information['acceptable_type_object']
     type_object_for_text = information['type_object_for_text']
@@ -59,7 +62,10 @@ async def join_object(call: Message, state: FSMContext, database) -> None:
     await call.reply(get_text('edit_object_success'))
 
 
-async def no_correct_object(call: Message, state: FSMContext, command: str, arguments: str) -> None:
+async def no_correct_object(call: Message,
+                            state: FSMContext,
+                            command: str,
+                            arguments: str) -> None:
     await state.finish()
 
     await call.reply(get_text(command).format(arguments))

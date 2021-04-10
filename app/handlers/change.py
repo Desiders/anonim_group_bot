@@ -1,9 +1,10 @@
 from aiogram.types import Message
+from app.services.database import RedisDB
 
 from ..scripts.functions import get_text
 
 
-async def command_change(call: Message, database):
+async def command_change(call: Message, database: RedisDB) -> None:
     result, args = await database.change_id_room(call.from_user.id)
     if result is None:
         command_trigger = 'change_warning'

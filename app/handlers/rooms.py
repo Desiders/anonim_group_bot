@@ -1,22 +1,22 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.types.callback_query import CallbackQuery
+from app.services.database import RedisDB
 
 from ..scripts.functions import get_text, rooms_formatted, rooms_sorted
 
 
-async def command_rooms(call: Message, database):
+async def command_rooms(call: Message, database: RedisDB) -> None:
     inline_keyboards = [
         [   InlineKeyboardButton('Новые комнаты', callback_data='new_rooms'),
             InlineKeyboardButton('Старые комнаты', callback_data='old_rooms')],
         [   InlineKeyboardButton('Случайные комнаты', callback_data='random_rooms')],
     ]
-    # Создаём клавиатуру для сообщения
     markup = InlineKeyboardMarkup(inline_keyboard=inline_keyboards)
 
     await call.answer(get_text('rooms_mode'), reply_markup=markup)
 
 
-async def get_rooms(call: CallbackQuery, database):
+async def get_rooms(call: CallbackQuery, database: RedisDB) -> None:
     mode = call.data
     if mode.startswith('old'):
         rooms = await database.get_rooms(True)

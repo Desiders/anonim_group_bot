@@ -1,4 +1,5 @@
 from aiogram.dispatcher.dispatcher import Dispatcher
+
 from app.services.database import RedisDB
 from loader import config, dispatcher, logger
 
@@ -8,25 +9,23 @@ database = RedisDB(host=config.redis.host,
                    db=config.redis.db)
 
 
-async def shutdown(dispatcher: Dispatcher):
+async def shutdown(dispatcher: Dispatcher) -> None:
     logger.info("Close connections")
 
     await database.close()
     await database.wait_closed()
 
 
-async def startup(dispatcher: Dispatcher):
+async def startup(dispatcher: Dispatcher) -> None:
     from app import register_handlers
-    from app.filters import setup_filters
     from app.middlewares.database import DatabaseMiddleware
 
     dispatcher.middleware.setup(DatabaseMiddleware(database))
 
-    setup_filters(dispatcher)
     register_handlers(dispatcher)
 
 
-def main():
+def main() -> None:
     from aiogram import executor
 
     executor.start_polling(dispatcher,

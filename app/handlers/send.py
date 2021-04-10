@@ -1,8 +1,9 @@
 import asyncio
-from typing import Dict, List, Union
+from typing import Dict, List, Optional
 
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import MediaGroup, Message
+from app.services.database import RedisDB
 
 from ..scripts.functions import get_name, get_text, time_sleep
 
@@ -19,7 +20,7 @@ def get_media_group(album: list) -> list:
     return media_album
 
 
-async def send_media_group(call: Message, state: FSMContext):
+async def send_media_group(call: Message, state: FSMContext) -> None:
     async with state.proxy() as data:
         album, users = data[call.media_group_id]['album'], data[call.media_group_id]['users']
         media_group = get_media_group(album)
@@ -27,10 +28,13 @@ async def send_media_group(call: Message, state: FSMContext):
             await time_sleep('new_message_group')
             try:
                 await call.bot.send_media_group(user_id, media_group)
-            except: ...
+            except:
+                pass
 
 
-async def send_media_single(call: Message, caption: str, author: Dict[str, str], users: List[str]) -> None:
+async def send_media_single(call: Message,
+                            caption: str,
+                            users: List[str]) -> None:
     content_type = call.content_type
     if content_type not in ACCESS_TYPES:
         if content_type in IGNORE_TYPES:
@@ -42,7 +46,8 @@ async def send_media_single(call: Message, caption: str, author: Dict[str, str],
             await time_sleep(type_sleep)
             try:
                 await call.bot.send_message(user_id, caption, parse_mode='')
-            except: ...
+            except:
+                pass
     else:
         from_chat_id, message_id = call.chat.id, call.message_id
         for user_id in users:
@@ -50,10 +55,11 @@ async def send_media_single(call: Message, caption: str, author: Dict[str, str],
             try:
                 await call.bot.copy_message(user_id, from_chat_id, message_id,
                                             caption=caption, parse_mode='')
-            except: ...
+            except:
+                pass
 
 
-def get_caption(call: Message, author: Dict[str, str]) -> Union[None, str]:
+def get_caption(call: Message, author: Dict[str, str]) -> Optional[str]:
     if 'text' in call:
         caption = call.text
         if len(caption) > 4000:
@@ -70,13 +76,17 @@ def get_caption(call: Message, author: Dict[str, str]) -> Union[None, str]:
     return caption
 
 
-async def command_send_album(call: Message, state: FSMContext, database) -> None:
+async def command_send_album(call: Message,
+                             state: FSMContext,
+                             database: RedisDB) -> None:
     author, users = await database.get_members_over_send(call.from_user.id)
     if not users:
         return
     async with state.proxy() as data:
         if call.media_group_id not in data:
-            asyncio.get_event_loop().call_later(1.5, asyncio.create_task, send_media_group(call, state))
+            asyncio.get_event_loop().call_later(1.5,
+                                                asyncio.create_task,
+                                                send_media_group(call, state))
             caption = get_caption(call, author)
             if caption is None:
                 return await call.reply(get_text('send_warning_long'))
@@ -93,7 +103,7 @@ async def command_send_album(call: Message, state: FSMContext, database) -> None
         data._data.setdefault(call.media_group_id, standart_values)['album'].append(media)
 
 
-async def command_send_single(call: Message, database) -> None:
+async def command_send_single(call: Message, database: RedisDB) -> None:
     author, users = await database.get_members_over_send(call.from_user.id)
     if not users:
         return
@@ -101,5 +111,6 @@ async def command_send_single(call: Message, database) -> None:
     if caption is None:
         return await call.reply(get_text('send_warning_long'))
     del users[author["user_index"]]
-    asyncio.get_event_loop().call_later(0.1, asyncio.create_task, send_media_single(call, caption,
-                                                                                    author, users))
+    asyncio.get_event_loop().call_later(0.1,
+                                        asyncio.create_task,
+                                        send_media_single(call, caption, users))

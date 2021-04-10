@@ -2,7 +2,8 @@ from aiogram import Dispatcher
 
 
 def register_handlers(dispatcher: Dispatcher):
-    from aiogram.dispatcher.filters import CommandHelp, CommandStart, Text
+    from aiogram.dispatcher.filters import (CommandHelp, CommandStart,
+                                            MediaGroupFilter, Text)
     from aiogram.types.message import ContentType
 
     from .change import command_change
@@ -23,10 +24,8 @@ def register_handlers(dispatcher: Dispatcher):
     from .send import command_send_album, command_send_single
     from .start import command_start
 
-    dispatcher.register_message_handler(command_start,
-                                        CommandStart())
-    dispatcher.register_message_handler(command_help,
-                                        CommandHelp())
+    dispatcher.register_message_handler(command_start, CommandStart())
+    dispatcher.register_message_handler(command_help, CommandHelp())
     dispatcher.register_message_handler(command_commands, commands=['commands', 'команды'])
     dispatcher.register_message_handler(command_rooms, commands=['rooms', 'комнаты'])
     dispatcher.register_callback_query_handler(get_rooms, Text(endswith='rooms'))
@@ -48,7 +47,7 @@ def register_handlers(dispatcher: Dispatcher):
                                         content_types=ContentType.ANY)
     dispatcher.register_message_handler(command_info, commands=['info', 'информация'])
     dispatcher.register_message_handler(command_send_album,
-                                        is_media_group=True,
+                                        MediaGroupFilter(is_media_group=True),
                                         content_types=ContentType.ANY)
     dispatcher.register_message_handler(command_send_single, content_types=ContentType.ANY)
     dispatcher.register_errors_handler(command_error)

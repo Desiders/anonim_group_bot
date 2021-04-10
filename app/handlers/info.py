@@ -1,9 +1,10 @@
 from aiogram.types import Message
+from app.services.database import RedisDB
 
 from ..scripts.functions import get_text
 
 
-async def command_info(call: Message, database):
+async def command_info(call: Message, database: RedisDB) -> None:
     arg = call.get_args()
     server, rooms_count, users_count = await database.get_info()
     if arg != '+':
@@ -24,5 +25,6 @@ async def command_info(call: Message, database):
         stats = '\n'.join(f'{item[0]}:{item[1]}' for item in server.get('stats').items())
         keyspace = '\n'.join(f'{item[0]}:{item[1]}' for item in server.get('keyspace').items())
 
-        await call.answer(get_text('info_super').format(memory, stats, keyspace,
-                                                        rooms_count, users_count))
+        await call.answer(get_text('info_super').format(memory, stats,
+                                                        keyspace, rooms_count,
+                                                        users_count))
