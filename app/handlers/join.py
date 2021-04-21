@@ -1,14 +1,17 @@
-import asyncio
+from asyncio import create_task, get_event_loop
 from typing import Dict, List, Tuple
 
 from aiogram.types import Message
+from aiogram.utils.exceptions import BotBlocked, UserDeactivated
 from app.services.database import RedisDB
 
 from ..scripts.functions import (get_description, get_name, get_photo,
                                  get_text, time_sleep, validate_room_id)
 
 
-async def notify_users(call: Message, args: Tuple[str, Dict[str, str], List[str]]) -> None:
+async def notify_users(call: Message,
+                       args: Tuple[str, Dict[str, str], List[str]],
+                       database: RedisDB) -> None:
     _, profile, users = args
     nickname = get_name(profile)
     description = get_description(profile)
@@ -18,18 +21,18 @@ async def notify_users(call: Message, args: Tuple[str, Dict[str, str], List[str]
         for user_id in users:
             await time_sleep('new_member')
             try:
-                await call.bot.send_photo(chat_id=user_id,  photo=photo,
+                await call.bot.send_photo(chat_id=user_id, photo=photo,
                                           caption=text, parse_mode='')
-            except:
-                pass
+            except (BotBlocked, UserDeactivated):
+                await database.end_user(user_id)
     else:
         for user_id in users:
             await time_sleep('new_member')
             try:
                 await call.bot.send_message(chat_id=user_id, text=text,
                                             disable_web_page_preview=True, parse_mode='')
-            except:
-                pass
+            except (BotBlocked, UserDeactivated):
+                await database.end_user(user_id)
 
 
 async def command_join(call: Message, database: RedisDB) -> None:
@@ -44,8 +47,8 @@ async def command_join(call: Message, database: RedisDB) -> None:
     else:
         command_trigger = 'join_success' if result else 'join_warning_have_room'
     if isinstance(args, tuple):
-        asyncio.get_event_loop().call_later(0.2,
-                                            asyncio.create_task,
-                                            notify_users(call, args))
+        get_event_loop().call_later(0.2, create_task, notify_users(call,
+                                                                   args,
+                                                                   database))
 
     await call.answer(get_text(command_trigger).format(args))

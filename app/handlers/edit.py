@@ -6,9 +6,15 @@ from app.services.database import RedisDB
 from ..scripts.functions import get_text, validate_object
 
 MATCHES_NUMBERS = {
-    '1': dict(type_object='nickname', type_object_for_text='никнейма', acceptable_type_object='text'),
-    '2': dict(type_object='description', type_object_for_text='описания', acceptable_type_object='text'),
-    '3': dict(type_object='photo', type_object_for_text='фотографии', acceptable_type_object='photo'),
+    '1': dict(type_object='nickname',
+              type_object_for_text='никнейма',
+              acceptable_type_object='text'),
+    '2': dict(type_object='description',
+              type_object_for_text='описания',
+              acceptable_type_object='text'),
+    '3': dict(type_object='photo',
+              type_object_for_text='фотографии',
+              acceptable_type_object='photo')
 }
 
 
@@ -20,13 +26,15 @@ class EditCache(StatesGroup):
     new_object = State()
 
 
-async def command_edit(call: Message, state: FSMContext) -> None:
+async def command_edit(call: Message,
+                       state: FSMContext) -> None:
     await state.set_state(EditCache.number_object.state)
 
     await call.answer(get_text('edit'))
 
 
-async def join_number(call: Message, state: FSMContext) -> None:
+async def join_number(call: Message,
+                      state: FSMContext) -> None:
     number_object = call.text
     information = MATCHES_NUMBERS.get(number_object)
     if not information:

@@ -5,7 +5,7 @@ from app.services.database import RedisDB
 from ..scripts.functions import get_text, rooms_formatted, rooms_sorted
 
 
-async def command_rooms(call: Message, database: RedisDB) -> None:
+async def command_rooms(call: Message) -> None:
     inline_keyboards = [
         [   InlineKeyboardButton('Новые комнаты', callback_data='new_rooms'),
             InlineKeyboardButton('Старые комнаты', callback_data='old_rooms')],
@@ -16,14 +16,13 @@ async def command_rooms(call: Message, database: RedisDB) -> None:
     await call.answer(get_text('rooms_mode'), reply_markup=markup)
 
 
-async def get_rooms(call: CallbackQuery, database: RedisDB) -> None:
+async def get_rooms(call: CallbackQuery,
+                    database: RedisDB) -> None:
     mode = call.data
-    if mode.startswith('old'):
-        rooms = await database.get_rooms(True)
-    else:
-        rooms = await database.get_rooms(False)
-    random = mode.startswith('random')
-    rooms_mode = rooms_sorted(rooms, random)
+    rooms = await database.get_rooms()
+    use_random = mode.startswith('random')
+    reverse = not mode.startswith('old')
+    rooms_mode = rooms_sorted(rooms, use_random, reverse)
     rooms_for_text = rooms_formatted(rooms_mode)
     if not rooms_for_text:
         await call.message.answer(get_text('rooms_warning'))

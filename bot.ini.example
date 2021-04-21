@@ -8,13 +8,12 @@ password=
 db=
 
 [StandartValueConfig]
-min_length_nickname=4
 max_length_nickname=60
-min_length_description=6
 max_length_description=500
-standart_name=неизвестный
-standart_description=скрытность - моё второе имя
+standart_name=
+standart_description=
 time_sleep_new_member=0.3
-time_sleep_end_member=0.3
+time_sleep_kick_member=0.4
+time_sleep_leave_member=0.5
 time_sleep_new_message_single=0.1
 time_sleep_new_message_group=0.1

@@ -1,6 +1,7 @@
-import asyncio
+from asyncio import create_task, get_event_loop
 
 from aiogram.types import Message
+from aiogram.utils.exceptions import BotBlocked, UserDeactivated
 from app.services.database import RedisDB
 
 from ..scripts.functions import (get_name, get_text, time_sleep,
@@ -8,27 +9,30 @@ from ..scripts.functions import (get_name, get_text, time_sleep,
 from ..services.database import MAX_LENGTH_ROOM
 
 
-async def notify_users(call: Message, access_or_args: list) -> None:
+async def notify_users(call: Message,
+                       access_or_args: list,
+                       database: RedisDB) -> None:
     user_index, user_nickname, room_id, user_id, users = access_or_args
     del (users[user_index], users[0])
     try:
         await call.bot.send_message(user_id,
                                     get_text('kick_notify').format(room_id),
                                     disable_web_page_preview=True)
-    except:
-        pass
+    except (BotBlocked, UserDeactivated):
+        await database.end_user(user_id, room_id)
     for user_id in users:
-        await time_sleep('end_member')
+        await time_sleep('kick_member')
         try:
             await call.bot.send_message(user_id,
                                         get_text('kick_notify_all').format(user_index, user_nickname),
                                         disable_web_page_preview=True,
                                         parse_mode='')
-        except:
-            pass
+        except (BotBlocked, UserDeactivated):
+            await database.end_user(user_id, room_id)
 
 
-async def command_kick(call: Message, database: RedisDB) -> None:
+async def command_kick(call: Message,
+                       database: RedisDB) -> None:
     kick_user_id = call.get_args()
     if not kick_user_id:
         return await call.answer(get_text('kick_no_args'))
@@ -48,11 +52,10 @@ async def command_kick(call: Message, database: RedisDB) -> None:
         command_trigger = 'kick_success'
         nickname = parts[1]
         if not nickname:
-            parts[1]  = get_name()
-        asyncio.get_event_loop().call_later(0.2,
-                                            asyncio.create_task,
-                                            notify_users(call, parts))
+            parts[1] = get_name()
+        get_event_loop().call_later(0.2, create_task, notify_users(call,
+                                                                   parts,
+                                                                   database))
 
     await call.answer(get_text(command_trigger).format(parts),
                       disable_web_page_preview=True, parse_mode='')
-

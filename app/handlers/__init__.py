@@ -1,31 +1,27 @@
 from aiogram import Dispatcher
+from aiogram.dispatcher.filters import CommandStart, MediaGroupFilter, Text
+from aiogram.types.message import ContentType
+
+from .change import command_change
+from .commands import command_commands
+from .create import command_create
+from .edit import EditCache, command_edit, join_number, join_object
+from .error import command_error
+from .get import command_get
+from .info import command_info
+from .join import command_join
+from .kick import command_kick
+from .leave import command_leave
+from .members import command_members
+from .profile import command_profile
+from .room import command_room
+from .rooms import command_rooms, get_rooms
+from .send import command_send_album, command_send_single
+from .start import command_start
 
 
 def register_handlers(dispatcher: Dispatcher):
-    from aiogram.dispatcher.filters import (CommandHelp, CommandStart,
-                                            MediaGroupFilter, Text)
-    from aiogram.types.message import ContentType
-
-    from .change import command_change
-    from .commands import command_commands
-    from .create import command_create
-    from .edit import EditCache, command_edit, join_number, join_object
-    from .error import command_error
-    from .get import command_get
-    from .help import command_help
-    from .info import command_info
-    from .join import command_join
-    from .kick import command_kick
-    from .leave import command_leave
-    from .members import command_members
-    from .profile import command_profile
-    from .room import command_room
-    from .rooms import command_rooms, get_rooms
-    from .send import command_send_album, command_send_single
-    from .start import command_start
-
     dispatcher.register_message_handler(command_start, CommandStart())
-    dispatcher.register_message_handler(command_help, CommandHelp())
     dispatcher.register_message_handler(command_commands, commands=['commands', 'команды'])
     dispatcher.register_message_handler(command_rooms, commands=['rooms', 'комнаты'])
     dispatcher.register_callback_query_handler(get_rooms, Text(endswith='rooms'))

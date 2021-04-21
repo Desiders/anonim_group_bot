@@ -1,24 +1,25 @@
+from aiogram import Bot, Dispatcher, executor
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.dispatcher import Dispatcher
+from aiogram.types import ParseMode
 
+from app import register_handlers
+from app.middlewares.database import DatabaseMiddleware
 from app.services.database import RedisDB
-from loader import config, dispatcher, logger
-
-database = RedisDB(host=config.redis.host,
-                   port=config.redis.port,
-                   password=config.redis.password,
-                   db=config.redis.db)
+from loader import config, logger
 
 
 async def shutdown(dispatcher: Dispatcher) -> None:
     logger.info("Close connections")
+
+    database: RedisDB = dispatcher.bot['database']
 
     await database.close()
     await database.wait_closed()
 
 
 async def startup(dispatcher: Dispatcher) -> None:
-    from app import register_handlers
-    from app.middlewares.database import DatabaseMiddleware
+    database: RedisDB = dispatcher.bot['database']
 
     dispatcher.middleware.setup(DatabaseMiddleware(database))
 
@@ -26,12 +27,16 @@ async def startup(dispatcher: Dispatcher) -> None:
 
 
 def main() -> None:
-    from aiogram import executor
+    database = RedisDB(host=config.redis.host,
+                       port=config.redis.port,
+                       password=config.redis.password,
+                       db=config.redis.db)
 
-    executor.start_polling(dispatcher,
-                           skip_updates=False,
-                           on_startup=startup,
-                           on_shutdown=shutdown)
+    dispatcher = Dispatcher(storage=MemoryStorage(),
+                            bot=Bot(token=config.bot.token, parse_mode=ParseMode.HTML))
+    dispatcher.bot['database'] = database
+
+    executor.start_polling(dispatcher, on_startup=startup, on_shutdown=shutdown)
 
 
 if __name__ == '__main__':

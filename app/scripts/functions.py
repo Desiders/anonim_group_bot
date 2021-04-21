@@ -1,7 +1,7 @@
 from asyncio import sleep
 from json import load
 from random import randrange, shuffle
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from aiogram.types.message import Message
 from loader import config
@@ -9,7 +9,8 @@ from loader import config
 TIME_SLEEP_BY_TYPE = {'new_message_single': config.standart.time_sleep_new_message_single,
                       'new_message_group': config.standart.time_sleep_new_message_group,
                       'new_member': config.standart.time_sleep_new_member,
-                      'end_member': config.standart.time_sleep_end_member}
+                      'kick_member': config.standart.time_sleep_kick_member,
+                      'leave_member': config.standart.time_sleep_leave_member}
 
 
 def get_text(command: str) -> str:
@@ -51,39 +52,39 @@ def validate_room_id(room_id: str) -> bool:
     return True
 
 
-def validate_object(input_object: Message, type_object: str) -> Optional[str]:                    
+def validate_object(input_object: Message,
+                    type_object: str) -> Union[str, Tuple[str]]:                    
     if type_object == 'photo':
         return input_object.photo[-1].file_id
     if type_object == 'nickname' or type_object == 'description':
         text = input_object.text
         if type_object == 'nickname':
-            min_lenght = config.standart.min_length_nickname
             max_lenght = config.standart.max_length_nickname
         else:
-            min_lenght = config.standart.min_length_description
             max_lenght = config.standart.max_length_description
-        if min_lenght <= len(text) <= max_lenght:
+        if len(text) > max_lenght:
+            parts = (config.standart.max_length_nickname, config.standart.max_length_description)
+            return parts
+        else:
             return text
-    arguments = [config.standart.min_length_nickname,
-                 config.standart.max_length_nickname,
-                 config.standart.min_length_description,
-                 config.standart.max_length_description]
-    return arguments
 
 
-def rooms_sorted(rooms: List[str], random_: bool) -> List[str]:
-    if random_:
-        shuffle(rooms)
-        return rooms
+def rooms_sorted(rooms: List[str],
+                 use_random: bool,
+                 reverse: bool) -> List[Optional[str]]:
     length_rooms = len(rooms)
     iteration = length_rooms if length_rooms < 5 else 5
+    if reverse:
+        rooms = rooms[::-1]
+    if use_random:
+        shuffle(rooms)
     rooms = rooms[:iteration]
     return rooms
 
 
-def rooms_formatted(rooms: list) -> str:
+def rooms_formatted(rooms: list) -> Optional[str]:
     if rooms == []:
-        return
+        return None
     start = '- '
     style = '<code>{}</code>'
     rooms_formatted = [start + style.format(room) for room in rooms]
@@ -91,7 +92,8 @@ def rooms_formatted(rooms: list) -> str:
     return rooms_over_text
 
 
-def validate_kick_user_index(kick_user_id: str, max_users_id: int) -> Tuple[bool, Optional[str]]:
+def validate_kick_user_index(kick_user_id: str,
+                             max_users_id: int) -> Tuple[bool, Optional[str]]:
     if not kick_user_id.isdecimal():
         return (False, 'no_number')
     if kick_user_id == '0':
@@ -130,7 +132,7 @@ def get_description(profile: dict) -> str:
 
 
 def get_photo(profile: dict) -> Optional[str]:
-    photo = profile.get('photo')
+    photo = profile.get('photo', None)
     return photo
 
 

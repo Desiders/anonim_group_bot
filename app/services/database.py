@@ -1,4 +1,4 @@
-from asyncio import Lock, get_event_loop
+from asyncio import Lock
 from typing import Dict, List, Optional, Tuple, Union
 
 import aioredis
@@ -22,38 +22,58 @@ class RedisDB:
         self._db = db
 
         self._redis: Optional[aioredis.RedisConnection] = None
-        self._connection_lock = Lock(loop=get_event_loop())
+        self._connection_lock = Lock()
     
     async def redis(self) -> aioredis.Redis:
         async with self._connection_lock:
             if self._redis is None or self._redis.closed:
-                self._redis = await aioredis.create_redis_pool((self._host, self._port),
-                                                                password=self._password,
-                                                                db=self._db,
-                                                                encoding='utf-8')
+                self._redis = await aioredis.create_redis_pool(address=(self._host, self._port),
+                                                               password=self._password,
+                                                               db=self._db,
+                                                               encoding='utf-8')
         return self._redis
 
-    async def close(self):
+    async def close(self) -> None:
         async with self._connection_lock:
             if self._redis and not self._redis.closed:
                 self._redis.close()
 
-    async def wait_closed(self):
+    async def wait_closed(self) -> None:
         async with self._connection_lock:
             if self._redis:
                 await self._redis.wait_closed()
 
-    async def add_user(self, user_id: int):
+    async def add_user(self, user_id: int) -> None:
         redis = await self.redis()
 
         await redis.sadd(USERS_KEY, user_id)
-
-    async def get_rooms(self, reverse: bool) -> List[str]:
+    
+    async def end_user(self,
+                       user_id: int,
+                       room_id: Optional[int] = None) -> None:
         redis = await self.redis()
-        if reverse:
-            rooms = await redis.zrevrange(ROOMS_KEY, 0, -1)
-        else:
-            rooms = await redis.zrange(ROOMS_KEY, 0, -1)
+
+        key_user = generate_key(USER_KEY, user_id)
+        key_user_profile = generate_key(PROFILE_KEY, user_id)
+        if room_id is None:
+            room_id = await redis.get(key_user)
+        key_room = generate_key(ROOM_KEY, room_id)
+
+        transaction = redis.multi_exec()
+        transaction.unlink(key_user, key_user_profile)
+        transaction.lrem(key_room, 1, user_id)
+        transaction.llen(key_room)
+        _, _, room_length = await transaction.execute()
+        if room_length == 0:
+            transaction = redis.multi_exec()
+            transaction.zrem(ROOMS_KEY, room_id)
+            transaction.unlink(key_room)
+            await transaction.execute()
+
+
+    async def get_rooms(self) -> List[str]:
+        redis = await self.redis()
+        rooms = await redis.zrange(ROOMS_KEY, 0, -1)
         return rooms
 
     async def get_room(self, user_id: int) -> Tuple[bool, Optional[Tuple[str, int]]]:
@@ -67,7 +87,7 @@ class RedisDB:
         length = await redis.llen(key_room)
         return (True, (room_id, length))
 
-    async def new_room(self, user_id: int) -> Tuple[Union[bool, str, None]]:
+    async def create_room(self, user_id: int) -> Tuple[Union[bool, str, None]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -110,7 +130,7 @@ class RedisDB:
         _, user_profile, users, _ = await transaction.execute()
         return (True, (join_id_room, user_profile, users))
     
-    async def end_room(self, user_id: int) -> Tuple[Union[None, bool, str]]:
+    async def leave_room(self, user_id: int) -> Tuple[Union[None, List[Optional[str]], bool, str]]:
         redis = await self.redis()
 
         key_user = generate_key(USER_KEY, user_id)
@@ -118,19 +138,24 @@ class RedisDB:
         if not room_id:
             return (None, ...)
         key_room = generate_key(ROOM_KEY, room_id)
+        key_user_profile = generate_key(PROFILE_KEY, user_id)
 
         transaction = redis.multi_exec()
         transaction.unlink(key_user)
+        transaction.hget(key_user_profile, 'nickname')
+        transaction.lrange(key_room, 0, -1)
         transaction.lrem(key_room, 1, user_id)
-        transaction.llen(key_room)
-        result = await transaction.execute()
-        delete = not result[-1]
+        _, leave_user_nickname, users, _ = await transaction.execute()
+        delete = len(users) <= 1
         if delete:
             transaction = redis.multi_exec()
             transaction.zrem(ROOMS_KEY, room_id)
             transaction.unlink(key_room)
             await transaction.execute()
-        return (delete, room_id)
+            leave_user_index = ...
+        else:
+            leave_user_index = users.index(str(user_id))
+        return (delete, [leave_user_index, leave_user_nickname, room_id, users])
 
     async def get_members(self, user_id: int) -> Optional[int]:
         redis = await self.redis()

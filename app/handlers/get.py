@@ -1,8 +1,13 @@
 from aiogram.types import Message
 from app.services.database import RedisDB
 
-from ..scripts.functions import (get_description, get_name, get_photo,
-                                 get_text, validate_get_user_index)
+from ..scripts.functions import (
+    get_description,
+    get_name,
+    get_photo,
+    get_text,
+    validate_get_user_index
+)
 
 
 async def command_get(call: Message, database: RedisDB) -> None:
