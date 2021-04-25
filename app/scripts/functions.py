@@ -14,7 +14,7 @@ TIME_SLEEP_BY_TYPE = {'new_message_single': config.standart.time_sleep_new_messa
 
 
 def get_text(command: str) -> str:
-    with open(f'app/wording/commands.json', encoding='utf-8') as commands:
+    with open('app/wording/commands.json', encoding='utf-8') as commands:
         commands = load(commands)
         command = commands[command]
         return command
@@ -85,7 +85,7 @@ def rooms_sorted(rooms: List[str],
 def rooms_formatted(rooms: list) -> Optional[str]:
     if rooms == []:
         return None
-    start = '- '
+    start = 'Номер: '
     style = '<code>{}</code>'
     rooms_formatted = [start + style.format(room) for room in rooms]
     rooms_over_text = '\n'.join(rooms_formatted)

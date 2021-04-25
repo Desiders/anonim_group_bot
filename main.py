@@ -6,12 +6,10 @@ from aiogram.types import ParseMode
 from app import register_handlers
 from app.middlewares.database import DatabaseMiddleware
 from app.services.database import RedisDB
-from loader import config, logger
+from loader import config
 
 
 async def shutdown(dispatcher: Dispatcher) -> None:
-    logger.info("Close connections")
-
     database: RedisDB = dispatcher.bot['database']
 
     await database.close()

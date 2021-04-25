@@ -38,7 +38,10 @@ async def join_number(call: Message,
     number_object = call.text
     information = MATCHES_NUMBERS.get(number_object)
     if not information:
-        return await no_correct_object(call, state, 'edit_number_warning', number_object)
+        return await no_correct_object(call,
+                                       state,
+                                       'edit_number_warning',
+                                       number_object)
     type_object = information['type_object']
     type_object_for_text = information['type_object_for_text']
     acceptable_type_object = information['acceptable_type_object']
@@ -58,14 +61,20 @@ async def join_object(call: Message,
     acceptable_type_objects = information['acceptable_type_object']
     type_object_for_text = information['type_object_for_text']
     if call.content_type != acceptable_type_objects:
-        return await no_correct_object(call, state, 'edit_object_warning', type_object_for_text)
+        return await no_correct_object(call=call, state=state,
+                                       command='edit_object_warning',
+                                       arguments=type_object_for_text)
+
     type_object = information['type_object']
     new_object = validate_object(call, type_object)
     if isinstance(new_object, tuple):
         arguments = new_object
-        return await no_correct_object(call, state, 'edit_object_restriction_warning', arguments)
+        return await no_correct_object(call=call, state=state,
+                                       command='edit_object_restriction_warning',
+                                       arguments=arguments)
     await state.finish()
-    await database.edit_profile(call.from_user.id, type_object, new_object)
+    await database.edit_profile(call.from_user.id, type_object,
+                                new_object)
 
     await call.reply(get_text('edit_object_success'))
 
@@ -76,4 +85,4 @@ async def no_correct_object(call: Message,
                             arguments: str) -> None:
     await state.finish()
 
-    await call.reply(get_text(command).format(arguments))
+    await call.reply(get_text(command).format(arguments), disable_web_page_preview=True)

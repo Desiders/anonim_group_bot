@@ -11,6 +11,7 @@ async def command_profile(call: Message, database: RedisDB) -> None:
     photo = get_photo(profile)
     text = get_text('profile').format(nickname, description)
     if photo:
-        await call.answer_photo(photo=photo, caption=text, parse_mode='')
+        await call.answer_photo(photo=photo, caption=text,
+                                parse_mode='')
     else:
-        await call.answer(text=text, disable_web_page_preview=True, parse_mode='')
+        await call.answer(text=text, parse_mode='')

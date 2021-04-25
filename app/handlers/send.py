@@ -83,8 +83,7 @@ def get_caption(call: Message, author: Dict[str, str]) -> Union[bool, str]:
         caption = ''
     nickname = get_name(author)
     user_index = author['user_index']
-    caption = get_text('send_message').format(nickname,
-                                              user_index,
+    caption = get_text('send_message').format(nickname, user_index,
                                               caption)
     return caption
 
@@ -98,12 +97,11 @@ async def command_send_album(call: Message,
     async with state.proxy() as data:
         media_group_id = call.media_group_id
         if media_group_id not in data:
-            get_event_loop().call_later(0.3, create_task, send_media_group(call,
-                                                                           state,
+            get_event_loop().call_later(0.3, create_task, send_media_group(call, state,
                                                                            database))
             caption = get_caption(call, author)
             if not caption:
-                return await call.reply(get_text('send_warning_long'))
+                return await call.reply(get_text('send_warning_long'), disable_web_page_preview=True)
         else:
             caption = ''
         content_type = call.content_type
@@ -123,9 +121,7 @@ async def command_send_single(call: Message, database: RedisDB) -> None:
         return None
     caption = get_caption(call, author)
     if not caption:
-        return await call.reply(get_text('send_warning_long'))
+        return await call.reply(get_text('send_warning_long'), disable_web_page_preview=True)
     del users[author["user_index"]]
-    get_event_loop().call_later(0.1, create_task, send_media_single(call,
-                                                                    caption,
-                                                                    users,
-                                                                    database))
+    get_event_loop().call_later(0.1, create_task, send_media_single(call, caption,
+                                                                    users, database))
